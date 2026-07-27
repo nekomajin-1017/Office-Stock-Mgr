@@ -12,8 +12,6 @@ class CreateNewUser implements CreatesNewUsers
 {
   use PasswordValidationRules;
 
-  private const PUBLIC_USER_ROLE = 'user';
-
   /**
    * @param array<string, string> $input
    */
@@ -35,7 +33,7 @@ class CreateNewUser implements CreatesNewUsers
       'name' => $input['name'],
       'email' => $input['email'],
       'password' => Hash::make($input['password']),
-      'role' => self::PUBLIC_USER_ROLE,
+      'role' => User::ROLE_USER,
       'is_active' => true,
     ]);
   }

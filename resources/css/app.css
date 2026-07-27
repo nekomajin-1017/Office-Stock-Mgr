@@ -16,7 +16,8 @@
   }
 
   button,
-  input {
+  input,
+  select {
     font: inherit;
   }
 }
@@ -81,10 +82,10 @@
 
   .button,
   .logout-button {
-    padding: 10px 20px;
+    padding: 5px 10px;
     color: #fff;
     cursor: pointer;
-    background: #2563eb;
+    background: #000;
     border: 0;
     border-radius: 6px;
   }
@@ -115,9 +116,91 @@
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .app-nav {
+    display: flex;
+    gap: 16px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .app-nav a {
+    color: #1d4ed8;
+    text-decoration: none;
+  }
+
+  .app-main {
+    min-height: calc(100vh - 65px);
   }
 
   .dashboard-main {
     padding: 32px;
+  }
+
+  .page-heading,
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .button-link,
+  .button-inline {
+    width: auto;
+    text-decoration: none;
+  }
+
+  .user-form {
+    display: grid;
+    width: min(100%, 600px);
+    gap: 20px;
+  }
+
+  .category-registration {
+    width: min(100%, 600px);
+    margin-bottom: 32px;
+  }
+
+  .category-form {
+    display: grid;
+    gap: 16px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    width: 100%;
+    margin-top: 24px;
+    border-collapse: collapse;
+    background: #fff;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #d1d5db;
+  }
+
+  .success-message {
+    color: #166534;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
   }
 }

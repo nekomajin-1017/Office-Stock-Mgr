@@ -18,6 +18,33 @@ class User extends Authenticatable
   /** @use HasFactory<UserFactory> */
   use HasFactory, Notifiable;
 
+  public const ROLE_USER = 'user';
+
+  public const ROLE_ADMIN = 'admin';
+
+  public function isAdmin(): bool
+  {
+    return $this->role === self::ROLE_ADMIN;
+  }
+
+  public function isUser(): bool
+  {
+    return $this->role === self::ROLE_USER;
+  }
+
+  public function isLastActiveAdmin(): bool
+  {
+    if (! $this->isAdmin() || ! $this->is_active) {
+      return false;
+    }
+
+    return ! static::query()
+      ->whereKeyNot($this->getKey())
+      ->where('role', self::ROLE_ADMIN)
+      ->where('is_active', true)
+      ->exists();
+  }
+
   public function purchases(): HasMany
   {
     return $this->hasMany(Purchase::class, 'created_by');

@@ -1,5 +1,6 @@
 @props([
   'name',
+  'id' => null,
   'label' => '',
   'type' => 'text',
   'value' => null,
@@ -9,15 +10,16 @@
 @php
   $fieldValue = $useOld ? old($name, $value) : $value;
   $errorMessage = $errors->first($name);
+  $fieldId = $id ?? $name;
 @endphp
 
 <div class="form-group">
   @if($label !== '')
-    <label class="form-label" for="{{ $name }}">{{ $label }}</label>
+    <label class="form-label" for="{{ $fieldId }}">{{ $label }}</label>
   @endif
 
   <input
-    id="{{ $name }}"
+    id="{{ $fieldId }}"
     class="form-control"
     name="{{ $name }}"
     type="{{ $type }}"

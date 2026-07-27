@@ -13,10 +13,10 @@ class UserSeeder extends Seeder
   public function run(): void
   {
     $users = [
-      ['name' => '管理者', 'email' => 'admin@example.com', 'role' => 'admin'],
-      ['name' => '一般ユーザー1', 'email' => 'staff1@example.com', 'role' => 'user'],
-      ['name' => '一般ユーザー2', 'email' => 'staff2@example.com', 'role' => 'user'],
-      ['name' => '一般ユーザー3', 'email' => 'staff3@example.com', 'role' => 'user'],
+      ['name' => '管理者', 'email' => 'admin@example.com', 'role' => User::ROLE_ADMIN],
+      ['name' => '一般ユーザー1', 'email' => 'staff1@example.com', 'role' => User::ROLE_USER],
+      ['name' => '一般ユーザー2', 'email' => 'staff2@example.com', 'role' => User::ROLE_USER],
+      ['name' => '一般ユーザー3', 'email' => 'staff3@example.com', 'role' => User::ROLE_USER],
     ];
 
     foreach ($users as $user) {
