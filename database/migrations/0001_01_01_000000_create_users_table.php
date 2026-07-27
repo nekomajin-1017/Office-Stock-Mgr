@@ -16,7 +16,7 @@ return new class extends Migration
       $table->string('name', 100);
       $table->string('email')->unique();
       $table->string('password');
-      $table->string('role', 20)->default('staff');
+      $table->string('role', 20)->default('user');
       $table->boolean('is_active')->default(true);
       $table->timestamps();
     });
