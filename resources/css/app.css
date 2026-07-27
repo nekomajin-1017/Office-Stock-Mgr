@@ -171,6 +171,54 @@
     gap: 16px;
   }
 
+  .product-form {
+    display: grid;
+    width: min(100%, 600px);
+    gap: 20px;
+  }
+
+  .filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: end;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .inline-form {
+    display: inline;
+  }
+
+  .text-button {
+    padding: 0;
+    color: #1d4ed8;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    text-decoration: underline;
+  }
+
+  .detail-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .detail-list div {
+    padding: 16px;
+    background: #fff;
+    border-radius: 6px;
+  }
+
+  .detail-list dt {
+    font-weight: 600;
+  }
+
+  .detail-list dd {
+    margin: 8px 0 0;
+  }
+
   .table-wrapper {
     overflow-x: auto;
   }

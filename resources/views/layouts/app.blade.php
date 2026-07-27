@@ -14,6 +14,7 @@
     <nav aria-label="メインナビゲーション">
       <ul class="app-nav">
         <li><a href="{{ route('dashboard') }}">ダッシュボード</a></li>
+        <li><a href="{{ route('products.index') }}">商品管理</a></li>
         @can('viewAny', App\Models\User::class)
           <li><a href="{{ route('users.index') }}">ユーザー管理</a></li>
         @endcan

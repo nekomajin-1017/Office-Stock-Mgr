@@ -17,6 +17,11 @@ class Stock extends Model
     return $this->belongsTo(Product::class);
   }
 
+  public function inventoryValue(): float
+  {
+    return $this->quantity * (float) $this->average_cost;
+  }
+
   protected function casts(): array
   {
     return [
