@@ -162,23 +162,6 @@
     background: #e9f0ff;
   }
 
-  .app-nav-icon {
-    display: grid;
-    width: 24px;
-    height: 24px;
-    color: #51627e;
-    font-size: 0.65rem;
-    font-weight: 700;
-    background: #eef2f8;
-    border-radius: 6px;
-    place-items: center;
-  }
-
-  .is-active .app-nav-icon {
-    color: #fff;
-    background: #2563eb;
-  }
-
   .app-main {
     min-width: 0;
   }

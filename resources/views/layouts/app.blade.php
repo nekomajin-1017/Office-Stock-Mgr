@@ -32,38 +32,32 @@
         <ul class="app-nav">
           <li>
             <a @class(['app-nav-link', 'is-active' => request()->routeIs('products.*')]) href="{{ route('products.index') }}">
-              <span class="app-nav-icon" aria-hidden="true">商品</span>
               商品管理
             </a>
           </li>
           <li>
             <a @class(['app-nav-link', 'is-active' => request()->routeIs('suppliers.*')]) href="{{ route('suppliers.index') }}">
-              <span class="app-nav-icon" aria-hidden="true">仕入</span>
               仕入先管理
             </a>
           </li>
           <li>
             <a @class(['app-nav-link', 'is-active' => request()->routeIs('purchases.*')]) href="{{ route('purchases.index') }}">
-              <span class="app-nav-icon" aria-hidden="true">伝票</span>
               仕入管理
             </a>
           </li>
           <li>
             <a @class(['app-nav-link', 'is-active' => request()->routeIs('customers.*')]) href="{{ route('customers.index') }}">
-              <span class="app-nav-icon" aria-hidden="true">顧客</span>
               顧客管理
             </a>
           </li>
           <li>
             <a @class(['app-nav-link', 'is-active' => request()->routeIs('stocks.*')]) href="{{ route('stocks.index') }}">
-              <span class="app-nav-icon" aria-hidden="true">在庫</span>
               在庫管理
             </a>
           </li>
           @can('viewAny', App\Models\Category::class)
             <li>
               <a @class(['app-nav-link', 'is-active' => request()->routeIs('categories.*')]) href="{{ route('categories.index') }}">
-                <span class="app-nav-icon" aria-hidden="true">分</span>
                 カテゴリ管理
               </a>
             </li>
@@ -71,7 +65,6 @@
           @can('viewAny', App\Models\User::class)
             <li>
               <a @class(['app-nav-link', 'is-active' => request()->routeIs('users.*')]) href="{{ route('users.index') }}">
-                <span class="app-nav-icon" aria-hidden="true">人</span>
                 ユーザー管理
               </a>
             </li>

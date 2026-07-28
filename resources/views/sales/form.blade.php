@@ -1,0 +1,8 @@
+@extends('layouts.app')
+@section('title','販売伝票登録')
+@section('content')
+@php($items=old('items',[['product_id'=>'','quantity'=>1,'unit_price'=>'']]))
+<section class="dashboard-main form-page"><h1>販売伝票登録</h1><form class="purchase-form" method="post" data-sale-form>@csrf
+<div class="form-group"><label class="form-label">顧客<select class="form-control" name="customer_id" required><option value="">選択してください</option>@foreach($customers as $customer)<option value="{{ $customer->id }}" @selected((string)$customer->id===old('customer_id'))>{{ $customer->name }}</option>@endforeach</select></label></div><x-form-field name="sale_date" type="date" label="販売日" :value="old('sale_date',now()->toDateString())" required />
+<div data-sale-items>@foreach($items as $i=>$item)<div data-sale-item><select class="form-control" name="items[{{ $i }}][product_id]" required><option value="">商品を選択</option>@foreach($products as $product)<option value="{{ $product->id }}" data-stock="{{ $product->stock?->quantity ?? 0 }}" @selected((string)$product->id===(string)($item['product_id']??''))>{{ $product->name }}（在庫: {{ $product->stock?->quantity ?? 0 }}）</option>@endforeach</select><input class="form-control" name="items[{{ $i }}][quantity]" type="number" min="1" value="{{ $item['quantity']??1 }}" required><input class="form-control" name="items[{{ $i }}][unit_price]" type="number" min="0" step="0.01" value="{{ $item['unit_price']??'' }}" required><output data-line-total>0.00 円</output><button type="button" data-remove-sale-item>削除</button></div>@endforeach</div><button type="button" data-add-sale-item>明細追加</button><p>合計: <output data-sale-total>0.00 円</output></p><button class="button" type="submit">下書き登録</button></form></section>
+@endsection
