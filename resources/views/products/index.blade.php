@@ -56,12 +56,12 @@
               <td>{{ $product->stock?->quantity ?? 0 }}</td>
               <td>{{ $product->is_active ? '有効' : '無効' }}</td>
               <td>
-                <a href="{{ route('products.edit', $product) }}">編集</a>
+                <a class="action-button" href="{{ route('products.edit', $product) }}">編集</a>
                 @if ($product->is_active)
                   <form class="inline-form" action="{{ route('products.destroy', $product) }}" method="post">
                     @csrf
                     @method('delete')
-                    <button class="text-button" type="submit">無効化</button>
+                    <button class="action-button action-button-danger" type="submit">無効化</button>
                   </form>
                 @endif
               </td>
@@ -74,6 +74,6 @@
         </tbody>
       </table>
     </div>
-    {{ $products->links() }}
+    <x-pagination :paginator="$products" />
   </section>
 @endsection

@@ -18,10 +18,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
   'total_amount',
   'created_by',
   'confirmed_at',
+  'confirmed_by',
 ])]
 class Purchase extends Model
 {
   use HasFactory;
+
+  public const STATUS_DRAFT = 'draft';
+
+  public const STATUS_CONFIRMED = 'confirmed';
 
   public function supplier(): BelongsTo
   {
@@ -36,6 +41,16 @@ class Purchase extends Model
   public function items(): HasMany
   {
     return $this->hasMany(PurchaseItem::class);
+  }
+
+  public function confirmer(): BelongsTo
+  {
+    return $this->belongsTo(User::class, 'confirmed_by');
+  }
+
+  public function isDraft(): bool
+  {
+    return $this->status === self::STATUS_DRAFT;
   }
 
   protected function casts(): array

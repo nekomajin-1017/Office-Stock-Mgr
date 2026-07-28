@@ -80,11 +80,17 @@ class ProductManagementTest extends TestCase
     $this->actingAs($user)
       ->get(route('products.index'))
       ->assertOk()
+      ->assertSee('11件中1〜10件目を表示')
       ->assertViewHas('products', function (LengthAwarePaginator $products): bool {
         return $products->total() === 11
           && $products->count() === 10
           && $products->every(fn (Product $product): bool => $product->relationLoaded('category') && $product->relationLoaded('stock'));
       });
+
+    $this->actingAs($user)
+      ->get(route('products.index', ['page' => 2]))
+      ->assertOk()
+      ->assertSee('11件中11〜11件目を表示');
   }
 
   public function test_inactive_category_cannot_be_selected_for_new_product(): void

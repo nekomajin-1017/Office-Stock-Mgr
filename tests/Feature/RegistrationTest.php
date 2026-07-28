@@ -28,7 +28,7 @@ class RegistrationTest extends TestCase
       'password_confirmation' => 'password123',
     ]);
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('products.index'));
     $user = User::where('email', 'taro@example.com')->firstOrFail();
     $this->assertAuthenticatedAs($user);
     $this->assertNotSame('password123', $user->password);

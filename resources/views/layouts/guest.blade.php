@@ -10,7 +10,10 @@
 
 <body class="guest-body">
   <main class="auth-main">
-    @yield('main')
+    <section class="auth-panel">
+      <a class="guest-brand" href="{{ route('products.index') }}">OfficeStockMgr</a>
+      @yield('main')
+    </section>
   </main>
 </body>
 

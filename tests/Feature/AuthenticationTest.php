@@ -17,9 +17,9 @@ class AuthenticationTest extends TestCase
       ->assertSee('ログイン');
   }
 
-  public function test_guest_is_redirected_to_login_screen(): void
+  public function test_guest_is_redirected_to_login_screen_from_product_list(): void
   {
-    $this->get(route('dashboard'))
+    $this->get(route('products.index'))
       ->assertRedirect(route('login'));
   }
 
@@ -30,7 +30,7 @@ class AuthenticationTest extends TestCase
     $this->post(route('login'), [
       'email' => $user->email,
       'password' => 'password',
-    ])->assertRedirect(route('dashboard'));
+    ])->assertRedirect(route('products.index'));
 
     $this->assertAuthenticatedAs($user);
   }
@@ -65,7 +65,7 @@ class AuthenticationTest extends TestCase
 
     $this->actingAs($user)
       ->post(route('logout'))
-      ->assertRedirect(route('dashboard'));
+      ->assertRedirect('/');
 
     $this->assertGuest();
   }

@@ -7,7 +7,7 @@
 @section('title', $isEditing ? 'ユーザー編集' : 'ユーザー登録')
 
 @section('content')
-  <section class="dashboard-main">
+  <section class="dashboard-main form-page">
     <h1>{{ $isEditing ? 'ユーザー編集' : 'ユーザー登録' }}</h1>
     <form class="user-form" action="{{ $isEditing ? route('users.update', $user) : route('users.store') }}" method="post">
       @csrf

@@ -41,11 +41,11 @@ class AuthorizationTest extends TestCase
     $user = User::factory()->create(['role' => User::ROLE_USER]);
 
     $this->actingAs($admin)
-      ->get(route('dashboard'))
+      ->get(route('products.index'))
       ->assertSee('ユーザー管理');
 
     $this->actingAs($user)
-      ->get(route('dashboard'))
+      ->get(route('products.index'))
       ->assertDontSee('ユーザー管理');
   }
 

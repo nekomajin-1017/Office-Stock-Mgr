@@ -39,6 +39,15 @@ class StockMovement extends Model
     return $this->morphTo();
   }
 
+  public function referenceNumber(): string
+  {
+    return match (true) {
+      $this->reference instanceof Purchase => $this->reference->purchase_number,
+      $this->reference instanceof Sale => $this->reference->sale_number,
+      default => '-',
+    };
+  }
+
   protected function casts(): array
   {
     return [

@@ -12,7 +12,7 @@
   <section class="dashboard-main">
     <div class="page-heading">
       <h1>商品詳細</h1>
-      <a href="{{ route('products.edit', $product) }}">編集する</a>
+      <a class="action-button" href="{{ route('products.edit', $product) }}">編集する</a>
     </div>
     <dl class="detail-list">
       <div>

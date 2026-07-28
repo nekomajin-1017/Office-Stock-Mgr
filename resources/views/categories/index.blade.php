@@ -4,13 +4,13 @@
 
 @section('content')
   <section class="dashboard-main">
-    <h1>カテゴリ管理</h1>
+    <h1 class="category-page-title">カテゴリ管理</h1>
     @if (session('status'))
       <p class="success-message">{{ session('status') }}</p>
     @endif
     <section class="category-registration" aria-labelledby="category-registration-title">
       <h2 id="category-registration-title">新規登録</h2>
-      <form class="category-form" action="{{ route('categories.store') }}" method="post">
+      <form class="category-form category-form--inline" action="{{ route('categories.store') }}" method="post">
         @csrf
         <x-form-field name="name" label="カテゴリ名" required />
         <div class="form-group">
@@ -44,7 +44,7 @@
                 <td>{{ $category->is_active ? '有効' : '無効' }}</td>
                 <td>
                   <details>
-                    <summary>編集</summary>
+                    <summary class="action-button">編集</summary>
                     <form class="category-form" action="{{ route('categories.update', $category) }}" method="post">
                       @csrf
                       @method('put')

@@ -29,7 +29,7 @@
               <td>{{ $user->email }}</td>
               <td>{{ $user->isAdmin() ? '管理者' : '一般ユーザー' }}</td>
               <td>{{ $user->is_active ? '有効' : '無効' }}</td>
-              <td><a href="{{ route('users.edit', $user) }}">編集</a></td>
+              <td><a class="action-button" href="{{ route('users.edit', $user) }}">編集</a></td>
             </tr>
           @empty
             <tr>

@@ -7,7 +7,7 @@
 @section('title', $isEditing ? '商品編集' : '商品登録')
 
 @section('content')
-  <section class="dashboard-main">
+  <section class="dashboard-main form-page">
     <h1>{{ $isEditing ? '商品編集' : '商品登録' }}</h1>
     <form class="product-form" action="{{ $isEditing ? route('products.update', $product) : route('products.store') }}" method="post">
       @csrf
