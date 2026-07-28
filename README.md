@@ -56,3 +56,39 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+# レポートSQL
+
+すべてのレポートは無効商品、下書き伝票、取消済み伝票を集計対象から除外します。
+
+## 未販売商品
+
+商品ごとに確定済み販売明細が存在しないことを`NOT EXISTS`で検証します。結合結果の`NULL`判定ではなく存在判定を使うため、販売明細が複数件あっても重複行を作りません。
+
+```sql
+SELECT * FROM products
+WHERE is_active = 1
+AND NOT EXISTS (
+    SELECT 1
+    FROM sale_items
+    JOIN sales ON sales.id = sale_items.sale_id
+    WHERE sale_items.product_id = products.id
+      AND sales.status = 'confirmed'
+);
+```
+
+## 最新仕入単価
+
+商品に紐づく確定済み仕入明細を仕入日、明細IDの降順で1件に絞る相関サブクエリです。同日複数仕入時は明細IDが大きい方を最新とします。仕入履歴がない商品は`NULL`となり、画面では「仕入履歴なし」と表示します。
+
+## 在庫不足商品
+
+商品と在庫を左結合し、在庫レコードがない商品は`COALESCE`で在庫数0として扱います。`現在庫数 <= 発注基準数`の商品を抽出し、`発注基準数 - 現在庫数`を不足数として計算します。
+
+## 販売数量・ランキング
+
+確定済み販売明細を商品ごとに集計するサブクエリで販売数量と販売金額を算出します。平均超過商品はこの集計結果の平均販売数と比較して抽出し、ランキングは販売数量の降順、同数時は商品コード順で並べます。対象期間と表示件数は集計時に適用します。
+
+## 在庫一覧PDF
+
+在庫一覧は検索・絞り込み・ページネーションを備えた業務画面で確認でき、帳票として配布する要件はありません。そのため現時点ではPDF出力を実装しません。外部提出や棚卸し用の固定時点帳票が必要になった場合に追加します。

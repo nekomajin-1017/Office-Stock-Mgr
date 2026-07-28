@@ -9,15 +9,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsAdmin
 {
-  /**
-   * Handle an incoming request.
-   *
-   * @param Closure(Request): Response $next
-   */
-  public function handle(Request $request, Closure $next): Response
-  {
-    abort_unless($request->user()?->can('viewAny', User::class), 403);
+    /**
+     * Handle an incoming request.
+     *
+     * @param  Closure(Request): Response  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        abort_unless($request->user()?->can('viewAny', User::class), 403);
 
-    return $next($request);
-  }
+        return $next($request);
+    }
 }

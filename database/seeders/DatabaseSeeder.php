@@ -7,17 +7,19 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-  use WithoutModelEvents;
+    use WithoutModelEvents;
 
-  public function run(): void
-  {
-    $this->call([
-      UserSeeder::class,
-      CategorySeeder::class,
-      ProductSeeder::class,
-      StockSeeder::class,
-      SupplierSeeder::class,
-      CustomerSeeder::class,
-    ]);
-  }
+    public function run(): void
+    {
+        $this->call([
+            UserSeeder::class,
+            CategorySeeder::class,
+            SupplierSeeder::class,
+            ProductSeeder::class,
+            StockSeeder::class,
+            PurchaseSeeder::class,
+            CustomerSeeder::class,
+            SaleSeeder::class,
+        ]);
+    }
 }

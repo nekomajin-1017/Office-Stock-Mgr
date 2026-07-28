@@ -14,29 +14,29 @@ use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-  public function boot(): void
-  {
-    Fortify::createUsersUsing(CreateNewUser::class);
+    public function boot(): void
+    {
+        Fortify::createUsersUsing(CreateNewUser::class);
 
-    Fortify::loginView(fn () => view('auth.login'));
-    Fortify::registerView(fn () => view('auth.register'));
+        Fortify::loginView(fn () => view('auth.login'));
+        Fortify::registerView(fn () => view('auth.register'));
 
-    Fortify::authenticateUsing(function (Request $request): ?User {
-      $user = User::where('email', (string) $request->string('email'))->first();
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $user = User::where('email', (string) $request->string('email'))->first();
 
-      if (! $user || ! $user->is_active || ! Hash::check((string) $request->string('password'), $user->password)) {
-        return null;
-      }
+            if (! $user || ! $user->is_active || ! Hash::check((string) $request->string('password'), $user->password)) {
+                return null;
+            }
 
-      return $user;
-    });
+            return $user;
+        });
 
-    RateLimiter::for('login', function (Request $request): Limit {
-      $throttleKey = Str::transliterate(
-        Str::lower($request->string(Fortify::username())).'|'.$request->ip(),
-      );
+        RateLimiter::for('login', function (Request $request): Limit {
+            $throttleKey = Str::transliterate(
+                Str::lower($request->string(Fortify::username())).'|'.$request->ip(),
+            );
 
-      return Limit::perMinute(5)->by($throttleKey);
-    });
-  }
+            return Limit::perMinute(5)->by($throttleKey);
+        });
+    }
 }

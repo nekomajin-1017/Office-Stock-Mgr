@@ -10,23 +10,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['product_id', 'quantity', 'average_cost'])]
 class Stock extends Model
 {
-  use HasFactory;
+    use HasFactory;
 
-  public function product(): BelongsTo
-  {
-    return $this->belongsTo(Product::class);
-  }
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
 
-  public function inventoryValue(): float
-  {
-    return $this->quantity * (float) $this->average_cost;
-  }
+    public function inventoryValue(): float
+    {
+        return $this->quantity * (float) $this->average_cost;
+    }
 
-  protected function casts(): array
-  {
-    return [
-      'quantity' => 'integer',
-      'average_cost' => 'decimal:2',
-    ];
-  }
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'integer',
+            'average_cost' => 'decimal:2',
+        ];
+    }
 }

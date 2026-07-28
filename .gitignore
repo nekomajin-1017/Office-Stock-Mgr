@@ -20,6 +20,9 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/fonts/*
+!/storage/fonts/.gitignore
+/tmp/pdfs/
 /vendor
 _ide_helper.php
 Homestead.json
