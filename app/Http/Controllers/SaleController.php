@@ -46,7 +46,6 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request): RedirectResponse
     {
-        $this->authorize('create', Sale::class);
         $data = $request->validated();
         $this->ensureSufficientStock($data['items']);
 
@@ -94,7 +93,6 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): RedirectResponse
     {
-        $this->authorize('update', $sale);
         $data = $request->validated();
         $this->ensureSufficientStock($data['items']);
 

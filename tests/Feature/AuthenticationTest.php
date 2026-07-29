@@ -23,7 +23,7 @@ class AuthenticationTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_user_can_log_in(): void
+    public function test_active_user_can_log_in(): void
     {
         $user = User::factory()->create();
 

@@ -77,6 +77,38 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $anotherAdmin->id, 'role' => User::ROLE_ADMIN]);
     }
 
+    public function test_last_active_admin_cannot_be_deactivated(): void
+    {
+        $inactiveAdmin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'is_active' => false,
+        ]);
+        $lastActiveAdmin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($inactiveAdmin)
+            ->put(route('users.update', $lastActiveAdmin), $this->userData([
+                'email' => $lastActiveAdmin->email,
+                'role' => User::ROLE_ADMIN,
+                'is_active' => '0',
+                'password' => '',
+                'password_confirmation' => '',
+            ]));
+
+        $response->assertSessionHasErrors('role');
+        $this->assertContains(
+            '最後の有効な管理者を無効化または一般ユーザーへ変更することはできません。',
+            session('errors')->get('role'),
+        );
+        $this->assertDatabaseHas('users', [
+            'id' => $lastActiveAdmin->id,
+            'role' => User::ROLE_ADMIN,
+            'is_active' => true,
+        ]);
+    }
+
     public function test_admin_cannot_deactivate_or_demote_self(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'is_active' => true]);

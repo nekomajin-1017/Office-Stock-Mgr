@@ -73,7 +73,7 @@ class SaleConfirmationTest extends TestCase
     {
         [$u,$s,$p] = $this->sale(5, 3);
         $category = $p->category;
-        $missing = Product::create(['category_id' => $category->id, 'code' => 'P2', 'name' => 'P2', 'unit' => '個', 'standard_sale_price' => 1, 'reorder_level' => 1, 'is_active' => true]);
+        $missing = Product::factory()->create(['category_id' => $category->id, 'code' => 'P2', 'name' => 'P2']);
         SaleItem::create(['sale_id' => $s->id, 'product_id' => $missing->id, 'quantity' => 1, 'unit_price' => 1, 'cost_unit_price' => 0, 'subtotal' => 1, 'cost_amount' => 0, 'tax_amount' => 0]);
         $this->withoutExceptionHandling();
         try {
@@ -90,7 +90,13 @@ class SaleConfirmationTest extends TestCase
         $u = User::factory()->create();
         $c = Customer::create(['code' => 'C1', 'name' => 'C', 'is_active' => true]);
         $cat = Category::create(['name' => 'カテゴリ', 'is_active' => true]);
-        $p = Product::create(['category_id' => $cat->id, 'code' => 'P1', 'name' => 'P', 'unit' => '個', 'standard_sale_price' => 1, 'reorder_level' => 1, 'is_active' => true]);
+        $p = Product::factory()->create([
+            'category_id' => $cat->id,
+            'code' => 'P1',
+            'name' => 'P',
+            'standard_sale_price' => 1,
+            'reorder_level' => 1,
+        ]);
         Stock::create(['product_id' => $p->id, 'quantity' => $stockQuantity, 'average_cost' => 10]);
         $s = Sale::create(['sale_number' => 'S1', 'customer_id' => $c->id, 'sale_date' => '2026-07-28', 'status' => 'draft', 'subtotal' => 1, 'tax_amount' => 0, 'total_amount' => 1, 'created_by' => $u->id]);
         SaleItem::create(['sale_id' => $s->id, 'product_id' => $p->id, 'quantity' => $saleQuantity, 'unit_price' => 1, 'cost_unit_price' => 10, 'subtotal' => 1, 'cost_amount' => 1, 'tax_amount' => 0]);

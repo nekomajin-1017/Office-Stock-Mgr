@@ -21,8 +21,6 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
-        $this->authorize('create', Category::class);
-
         Category::create($request->validated());
 
         return to_route('categories.index')->with('status', 'カテゴリを登録しました。');
@@ -30,8 +28,6 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
-        $this->authorize('update', $category);
-
         $category->update($request->validated());
 
         return to_route('categories.index')->with('status', 'カテゴリを更新しました。');

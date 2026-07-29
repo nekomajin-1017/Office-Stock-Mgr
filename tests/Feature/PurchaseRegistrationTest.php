@@ -22,14 +22,14 @@ class PurchaseRegistrationTest extends TestCase
         [$user, $supplier, $product] = $this->createCandidates();
 
         $this->actingAs($user)->get(route('purchases.create'))
-            ->assertOk()->assertSee($supplier->name)->assertSee($product->name)->assertSee('明細を追加');
+            ->assertOk()->assertSee($supplier->name)->assertSee($product->name)->assertSee('別の商品を追加する');
     }
 
     public function test_inactive_supplier_and_product_are_excluded_from_candidates(): void
     {
         [$user, $supplier, $product] = $this->createCandidates();
         $inactiveSupplier = Supplier::create(['code' => 'SUP-002', 'name' => '無効仕入先', 'is_active' => false]);
-        $inactiveProduct = $this->createProduct($product->category, 'P-002', '無効商品', false);
+        $inactiveProduct = $this->createProduct($product->category, $supplier, 'P-002', '無効商品', false);
 
         $this->actingAs($user)->get(route('purchases.create'))
             ->assertSee($supplier->name)->assertSee($product->name)
@@ -55,7 +55,7 @@ class PurchaseRegistrationTest extends TestCase
     public function test_purchase_rejects_inactive_product(): void
     {
         [$user, $supplier, $product] = $this->createCandidates();
-        $inactiveProduct = $this->createProduct($product->category, 'P-002', '無効商品', false);
+        $inactiveProduct = $this->createProduct($product->category, $supplier, 'P-002', '無効商品', false);
 
         $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $inactiveProduct))
             ->assertSessionHasErrors('items.0.product_id');
@@ -75,7 +75,7 @@ class PurchaseRegistrationTest extends TestCase
     public function test_purchase_can_register_multiple_items_and_calculates_total(): void
     {
         [$user, $supplier, $product] = $this->createCandidates();
-        $secondProduct = $this->createProduct($product->category, 'P-002', '商品2', true);
+        $secondProduct = $this->createProduct($product->category, $supplier, 'P-002', '商品2', true);
         Stock::create(['product_id' => $secondProduct->id, 'quantity' => 0, 'average_cost' => 0]);
         $payload = $this->payload($supplier, $product, 2, 150);
         $payload['items'][] = ['product_id' => $secondProduct->id, 'quantity' => 3, 'unit_price' => 200];
@@ -118,15 +118,23 @@ class PurchaseRegistrationTest extends TestCase
         $user = User::factory()->create();
         $supplier = Supplier::create(['code' => 'SUP-001', 'name' => '有効仕入先', 'is_active' => true]);
         $category = Category::create(['name' => '文房具', 'is_active' => true]);
-        $product = $this->createProduct($category, 'P-001', '有効商品', true);
+        $product = $this->createProduct($category, $supplier, 'P-001', '有効商品', true);
         Stock::create(['product_id' => $product->id, 'quantity' => 0, 'average_cost' => 0]);
 
         return [$user, $supplier, $product];
     }
 
-    private function createProduct(Category $category, string $code, string $name, bool $active): Product
+    private function createProduct(Category $category, Supplier $supplier, string $code, string $name, bool $active): Product
     {
-        return Product::create(['category_id' => $category->id, 'code' => $code, 'name' => $name, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => $active]);
+        return Product::factory()->create([
+            'category_id' => $category->id,
+            'supplier_id' => $supplier->id,
+            'code' => $code,
+            'name' => $name,
+            'standard_sale_price' => 100,
+            'reorder_level' => 1,
+            'is_active' => $active,
+        ]);
     }
 
     private function payload(Supplier $supplier, Product $product, int $quantity = 1, int $unitPrice = 100): array

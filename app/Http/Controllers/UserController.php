@@ -28,8 +28,6 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        $this->authorize('create', User::class);
-
         User::create($request->validated());
 
         return to_route('users.index')->with('status', 'ユーザーを登録しました。');
@@ -44,8 +42,6 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $this->authorize('update', $user);
-
         $attributes = $request->validated();
 
         if ($attributes['password'] === null) {

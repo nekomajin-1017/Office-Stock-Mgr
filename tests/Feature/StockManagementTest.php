@@ -120,14 +120,12 @@ class StockManagementTest extends TestCase
 
     private function createProduct(Category $category, string $code, int $reorderLevel): Product
     {
-        return Product::create([
+        return Product::factory()->create([
             'category_id' => $category->id,
             'code' => $code,
             'name' => $code.' 商品',
-            'unit' => '個',
             'standard_sale_price' => 300,
             'reorder_level' => $reorderLevel,
-            'is_active' => true,
         ]);
     }
 

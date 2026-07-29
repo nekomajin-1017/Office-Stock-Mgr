@@ -61,8 +61,6 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        $this->authorize('create', Product::class);
-
         DB::transaction(function () use ($request): void {
             $product = Product::create($request->validated());
             $product->stock()->create([
@@ -96,8 +94,6 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
-        $this->authorize('update', $product);
-
         $product->update($request->validated());
 
         return to_route('products.index')->with('status', '商品情報を更新しました。');

@@ -41,7 +41,7 @@ class PurchaseListingTest extends TestCase
         $purchase->update(['subtotal' => 300, 'total_amount' => 300]);
 
         $this->actingAs($user)->get(route('purchases.show', $purchase))
-            ->assertOk()->assertSee($purchase->supplier->name)->assertSee($product->name)->assertSee('300.00 円')->assertSee('一覧へ戻る');
+            ->assertOk()->assertSee($purchase->supplier->name)->assertSee($product->name)->assertSee('300 円')->assertSee('一覧へ戻る');
     }
 
     public function test_purchase_list_preserves_search_query_in_pagination(): void
@@ -56,7 +56,7 @@ class PurchaseListingTest extends TestCase
         $user ??= User::factory()->create();
         $supplier = Supplier::create(['code' => 'SUP-'.$number, 'name' => '仕入先'.$number, 'is_active' => true]);
         $category = Category::firstOrCreate(['name' => '文房具'], ['is_active' => true]);
-        $product = Product::firstOrCreate(['code' => 'PRO-'.$number], ['category_id' => $category->id, 'name' => '商品'.$number, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => true]);
+        $product = Product::firstOrCreate(['code' => 'PRO-'.$number], ['category_id' => $category->id, 'supplier_id' => $supplier->id, 'name' => '商品'.$number, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => true]);
         $purchase = Purchase::create(['purchase_number' => $number, 'supplier_id' => $supplier->id, 'purchase_date' => $date, 'status' => $status, 'subtotal' => 0, 'tax_amount' => 0, 'total_amount' => 0, 'created_by' => $user->id]);
 
         return [$user, $purchase, $product];

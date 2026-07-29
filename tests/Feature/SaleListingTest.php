@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -41,7 +42,7 @@ class SaleListingTest extends TestCase
         $sale->update(['subtotal' => 300, 'total_amount' => 300]);
 
         $this->actingAs($user)->get(route('sales.show', $sale))
-            ->assertOk()->assertSee($sale->customer->name)->assertSee($product->name)->assertSee('300.00 円')->assertSee('一覧へ戻る');
+            ->assertOk()->assertSee($sale->customer->name)->assertSee($product->name)->assertSee('300 円')->assertSee('一覧へ戻る');
     }
 
     private function createSale(string $number, string $date, string $status, ?User $user = null): array
@@ -49,7 +50,8 @@ class SaleListingTest extends TestCase
         $user ??= User::factory()->create();
         $customer = Customer::create(['code' => 'CUS-'.$number, 'name' => '顧客'.$number, 'is_active' => true]);
         $category = Category::firstOrCreate(['name' => '文房具'], ['is_active' => true]);
-        $product = Product::firstOrCreate(['code' => 'PRO-'.$number], ['category_id' => $category->id, 'name' => '商品'.$number, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => true]);
+        $supplier = Supplier::factory()->create();
+        $product = Product::firstOrCreate(['code' => 'PRO-'.$number], ['category_id' => $category->id, 'supplier_id' => $supplier->id, 'name' => '商品'.$number, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => true]);
         $sale = Sale::create(['sale_number' => $number, 'customer_id' => $customer->id, 'sale_date' => $date, 'status' => $status, 'subtotal' => 0, 'tax_amount' => 0, 'total_amount' => 0, 'created_by' => $user->id]);
 
         return [$user, $sale, $product];

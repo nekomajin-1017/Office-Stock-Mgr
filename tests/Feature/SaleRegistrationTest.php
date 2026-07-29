@@ -106,7 +106,14 @@ class SaleRegistrationTest extends TestCase
 
     private function product(Category $category, string $code, string $name, bool $active): Product
     {
-        return Product::create(['category_id' => $category->id, 'code' => $code, 'name' => $name, 'unit' => '個', 'standard_sale_price' => 100, 'reorder_level' => 1, 'is_active' => $active]);
+        return Product::factory()->create([
+            'category_id' => $category->id,
+            'code' => $code,
+            'name' => $name,
+            'standard_sale_price' => 100,
+            'reorder_level' => 1,
+            'is_active' => $active,
+        ]);
     }
 
     private function payload(Customer $customer, Product $product, int $quantity = 1, int $price = 100): array

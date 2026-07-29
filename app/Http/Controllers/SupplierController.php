@@ -46,8 +46,6 @@ class SupplierController extends Controller
 
     public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        $this->authorize('create', Supplier::class);
-
         Supplier::create($request->validated());
 
         return to_route('suppliers.index')->with('status', '仕入先を登録しました。');
@@ -62,8 +60,6 @@ class SupplierController extends Controller
 
     public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
     {
-        $this->authorize('update', $supplier);
-
         $supplier->update($request->validated());
 
         return to_route('suppliers.index')->with('status', '仕入先情報を更新しました。');

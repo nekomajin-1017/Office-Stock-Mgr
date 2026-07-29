@@ -58,7 +58,14 @@ class InventoryWorkflowTest extends TestCase
         $sup = Supplier::create(['code' => 'S', 'name' => 'S', 'is_active' => true]);
         $cus = Customer::create(['code' => 'C', 'name' => 'C', 'is_active' => true]);
         $cat = Category::create(['name' => 'X', 'is_active' => true]);
-        $pro = Product::create(['category_id' => $cat->id, 'code' => 'P', 'name' => 'P', 'unit' => '個', 'standard_sale_price' => 1, 'reorder_level' => 1, 'is_active' => true]);
+        $pro = Product::factory()->create([
+            'category_id' => $cat->id,
+            'supplier_id' => $sup->id,
+            'code' => 'P',
+            'name' => 'P',
+            'standard_sale_price' => 1,
+            'reorder_level' => 1,
+        ]);
         $st = Stock::create(['product_id' => $pro->id, 'quantity' => 0, 'average_cost' => 0]);
         $p = Purchase::create(['purchase_number' => 'P1', 'supplier_id' => $sup->id, 'purchase_date' => '2026-07-28', 'status' => 'draft', 'subtotal' => 5, 'tax_amount' => 0, 'total_amount' => 5, 'created_by' => $a->id]);
         PurchaseItem::create(['purchase_id' => $p->id, 'product_id' => $pro->id, 'quantity' => 5, 'unit_price' => 1, 'subtotal' => 5, 'tax_amount' => 0]);

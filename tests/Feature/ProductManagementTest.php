@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Stock;
+use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -158,14 +159,8 @@ class ProductManagementTest extends TestCase
 
     private function createProduct(Category $category, array $overrides = []): Product
     {
-        return Product::create(array_merge([
+        return Product::factory()->create(array_merge([
             'category_id' => $category->id,
-            'code' => fake()->unique()->bothify('CODE-###'),
-            'name' => fake()->unique()->word(),
-            'unit' => '個',
-            'standard_sale_price' => 100,
-            'reorder_level' => 10,
-            'is_active' => true,
         ], $overrides));
     }
 
@@ -177,6 +172,7 @@ class ProductManagementTest extends TestCase
     {
         return array_merge([
             'category_id' => 0,
+            'supplier_id' => Supplier::factory()->create()->id,
             'code' => 'PEN-001',
             'name' => '油性ボールペン',
             'unit' => '本',

@@ -32,19 +32,23 @@ class CategoryManagementTest extends TestCase
             ->assertSessionHasErrors('name');
     }
 
-    public function test_admin_can_deactivate_and_reactivate_category(): void
+    public function test_admin_can_update_deactivate_and_reactivate_category(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $category = Category::create(['name' => '文房具', 'is_active' => true]);
 
         $this->actingAs($admin)
-            ->put(route('categories.update', $category), ['name' => '文房具', 'is_active' => '0'])
+            ->put(route('categories.update', $category), ['name' => 'オフィス用品', 'is_active' => '0'])
             ->assertRedirect(route('categories.index'));
 
-        $this->assertDatabaseHas('categories', ['id' => $category->id, 'is_active' => false]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $category->id,
+            'name' => 'オフィス用品',
+            'is_active' => false,
+        ]);
 
         $this->actingAs($admin)
-            ->put(route('categories.update', $category), ['name' => '文房具', 'is_active' => '1'])
+            ->put(route('categories.update', $category), ['name' => 'オフィス用品', 'is_active' => '1'])
             ->assertRedirect(route('categories.index'));
 
         $this->assertDatabaseHas('categories', ['id' => $category->id, 'is_active' => true]);

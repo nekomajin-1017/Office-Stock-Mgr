@@ -56,7 +56,6 @@ class PurchaseController extends Controller
 
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
-        $this->authorize('create', Purchase::class);
         $data = $request->validated();
 
         $purchase = DB::transaction(function () use ($data): Purchase {

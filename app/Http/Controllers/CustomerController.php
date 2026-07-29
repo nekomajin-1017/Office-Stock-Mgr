@@ -46,8 +46,6 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request): RedirectResponse
     {
-        $this->authorize('create', Customer::class);
-
         Customer::create($request->validated());
 
         return to_route('customers.index')->with('status', '顧客を登録しました。');
@@ -62,8 +60,6 @@ class CustomerController extends Controller
 
     public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
-        $this->authorize('update', $customer);
-
         $customer->update($request->validated());
 
         return to_route('customers.index')->with('status', '顧客情報を更新しました。');

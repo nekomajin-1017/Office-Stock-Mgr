@@ -119,7 +119,7 @@ class PurchaseConfirmationTest extends TestCase
     {
         [$user, $purchase, $product] = $this->createPurchase();
         $category = Category::create(['name' => '用紙', 'is_active' => true]);
-        $missingStockProduct = $this->createProduct($category, 'PAPER-001');
+        $missingStockProduct = $this->createProduct($category, $purchase->supplier, 'PAPER-001');
         PurchaseItem::create([
             'purchase_id' => $purchase->id,
             'product_id' => $missingStockProduct->id,
@@ -154,7 +154,7 @@ class PurchaseConfirmationTest extends TestCase
             'is_active' => true,
         ]);
         $category = Category::create(['name' => fake()->unique()->word(), 'is_active' => true]);
-        $product = $this->createProduct($category, fake()->unique()->bothify('PRO-###'));
+        $product = $this->createProduct($category, $supplier, fake()->unique()->bothify('PRO-###'));
         Stock::create([
             'product_id' => $product->id,
             'quantity' => $overrides['stock_quantity'] ?? 0,
@@ -182,16 +182,14 @@ class PurchaseConfirmationTest extends TestCase
         return [$user, $purchase, $product];
     }
 
-    private function createProduct(Category $category, string $code): Product
+    private function createProduct(Category $category, Supplier $supplier, string $code): Product
     {
-        return Product::create([
+        return Product::factory()->create([
             'category_id' => $category->id,
+            'supplier_id' => $supplier->id,
             'code' => $code,
-            'name' => fake()->unique()->word(),
-            'unit' => '個',
             'standard_sale_price' => 300,
             'reorder_level' => 10,
-            'is_active' => true,
         ]);
     }
 }
