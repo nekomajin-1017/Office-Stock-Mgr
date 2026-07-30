@@ -16,6 +16,29 @@ class ReportTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_authenticated_user_can_open_report_screen_from_navigation(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('products.index'))
+            ->assertSee(route('reports.index'), escape: false)
+            ->assertSee('レポート');
+
+        $this->actingAs($user)
+            ->get(route('reports.index'))
+            ->assertOk();
+    }
+
+    public function test_sql_intentions_are_not_rendered_on_report_screen(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('reports.index'))
+            ->assertDontSee('SQLの意図');
+    }
+
     public function test_unsold_products_are_extracted(): void
     {
         [$u,$p] = $this->product('未販売');

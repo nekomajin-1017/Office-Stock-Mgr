@@ -35,10 +35,7 @@
                     <h2>未販売商品</h2>
                     <p>確定済みの販売明細が一度もない有効商品です。</p>
                 </div>
-                <details class="report-sql-intent">
-                    <summary>SQLの意図</summary>
-                    <p><code>NOT EXISTS</code> で商品ごとの確定済み販売明細の存在を調べ、存在しない商品だけを残します。下書き・取消済みの販売伝票は集計対象外です。</p>
-                </details>
+                {{-- SQLの意図: NOT EXISTS で商品ごとの確定済み販売明細の存在を調べ、存在しない商品だけを残します。下書き・取消済みの販売伝票は集計対象外です。 --}}
             </div>
             <div class="table-wrapper">
                 <table class="data-table">
@@ -60,10 +57,7 @@
                     <h2>最新仕入単価</h2>
                     <p>商品ごとの直近の確定仕入単価です。仕入履歴がない商品も表示します。</p>
                 </div>
-                <details class="report-sql-intent">
-                    <summary>SQLの意図</summary>
-                    <p>商品ごとの相関サブクエリで、確定済み仕入を仕入日・明細IDの降順に並べ、先頭1件の単価を取得します。同日に複数明細がある場合は明細IDが大きい方を採用します。</p>
-                </details>
+                {{-- SQLの意図: 商品ごとの相関サブクエリで、確定済み仕入を仕入日・明細IDの降順に並べ、先頭1件の単価を取得します。同日に複数明細がある場合は明細IDが大きい方を採用します。 --}}
             </div>
             <div class="table-wrapper">
                 <table class="data-table">
@@ -89,10 +83,7 @@
                     <h2>在庫不足商品</h2>
                     <p>現在庫数が発注基準数以下の商品です。</p>
                 </div>
-                <details class="report-sql-intent">
-                    <summary>SQLの意図</summary>
-                    <p>商品と在庫を結合し、在庫レコードがない場合は <code>COALESCE</code> で0として扱います。発注基準数との差分を不足数として算出します。</p>
-                </details>
+                {{-- SQLの意図: 商品と在庫を結合し、在庫レコードがない場合は COALESCE で0として扱います。発注基準数との差分を不足数として算出します。 --}}
             </div>
             <div class="table-wrapper">
                 <table class="data-table">
@@ -119,10 +110,7 @@
                     <h2>平均販売数を上回る商品</h2>
                     <p>商品別販売数量の平均は {{ number_format($averageSalesQuantity, 2) }} 個です。</p>
                 </div>
-                <details class="report-sql-intent">
-                    <summary>SQLの意図</summary>
-                    <p>確定済み販売明細を商品単位で集計したサブクエリから平均販売数を計算し、同じ集計結果と比較して平均を上回る商品を抽出します。販売実績がない商品は平均計算・抽出の対象外です。</p>
-                </details>
+                {{-- SQLの意図: 確定済み販売明細を商品単位で集計したサブクエリから平均販売数を計算し、同じ集計結果と比較して平均を上回る商品を抽出します。販売実績がない商品は平均計算・抽出の対象外です。 --}}
             </div>
             <div class="table-wrapper">
                 <table class="data-table">
@@ -144,10 +132,7 @@
                     <h2>商品別販売ランキング</h2>
                     <p>販売数量の降順です。同数の場合は商品コード順に並べます。</p>
                 </div>
-                <details class="report-sql-intent">
-                    <summary>SQLの意図</summary>
-                    <p>確定済み販売明細を商品単位で集計し、販売数量・販売金額を算出します。対象期間と上位件数は画面の条件を集計サブクエリへ適用します。</p>
-                </details>
+                {{-- SQLの意図: 確定済み販売明細を商品単位で集計し、販売数量・販売金額を算出します。対象期間と上位件数は集計サブクエリへ適用します。 --}}
             </div>
             <div class="table-wrapper">
                 <table class="data-table">

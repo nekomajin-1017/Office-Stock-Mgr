@@ -301,9 +301,6 @@ class PurchaseController extends Controller
         }
     }
 
-    /**
-     * @param  Collection<int, PurchaseItem>  $items
-     */
     private function applyPurchaseToStock(Stock $stock, Collection $items, Purchase $purchase): void
     {
         $purchaseQuantity = $items->sum('quantity');

@@ -108,9 +108,6 @@ class ProductController extends Controller
         return to_route('products.index')->with('status', '商品を無効化しました。');
     }
 
-    /**
-     * @return Collection<int, Category>
-     */
     private function categoriesForForm(?Product $product = null): Collection
     {
         return Category::query()

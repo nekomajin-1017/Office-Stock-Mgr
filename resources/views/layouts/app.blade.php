@@ -60,6 +60,11 @@
                             在庫管理
                         </a>
                     </li>
+                    <li>
+                        <a @class(['app-nav-link', 'is-active' => request()->routeIs('reports.*')]) href="{{ route('reports.index') }}">
+                            レポート
+                        </a>
+                    </li>
                     @can('viewAny', App\Models\Category::class)
                         <li>
                             <a @class(['app-nav-link', 'is-active' => request()->routeIs('categories.*')]) href="{{ route('categories.index') }}">
