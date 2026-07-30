@@ -20,7 +20,21 @@
                     </form>
                 </div>
             @elseif ($sale->isConfirmed())
-                <a class="action-button" href="{{ route('sales.delivery-note', $sale) }}">納品書PDFを出力</a>
+                <div class="detail-actions">
+                    <a class="action-button" href="{{ route('sales.delivery-note', $sale) }}">納品書PDFを出力</a>
+                    @if (auth()->user()->isAdmin())
+                        <form action="{{ route('sales.correct', $sale) }}" method="post" onsubmit="return confirm('確定を解除して在庫を戻し、訂正画面へ進みます。よろしいですか？');">
+                            @csrf
+                            <button class="action-button" type="submit">訂正する</button>
+                        </form>
+                        <form class="cancel-form" action="{{ route('sales.cancel', $sale) }}" method="post" onsubmit="return confirm('この販売伝票を取り消します。よろしいですか？');">
+                            @csrf
+                            <label class="form-label" for="sale-cancellation-reason">取消理由</label>
+                            <input id="sale-cancellation-reason" class="form-control" name="reason" maxlength="255" required>
+                            <button class="action-button action-button-danger" type="submit">取り消す</button>
+                        </form>
+                    @endif
+                </div>
             @endif
         </div>
 
@@ -36,7 +50,16 @@
             <div><dt>伝票番号</dt><dd>{{ $sale->sale_number }}</dd></div>
             <div><dt>顧客</dt><dd>{{ $sale->customer->name }}</dd></div>
             <div><dt>販売日</dt><dd>{{ $sale->sale_date->format('Y/m/d') }}</dd></div>
-            <div><dt>状態</dt><dd>{{ $sale->status }}</dd></div>
+            <div><dt>状態</dt><dd>{{ $sale->statusLabel() }}</dd></div>
+            @if ($sale->confirmed_at)
+                <div><dt>確定日時</dt><dd>{{ $sale->confirmed_at->format('Y年m月d日 H:i') }}</dd></div>
+                <div><dt>確定者</dt><dd>{{ $sale->confirmer?->name }}</dd></div>
+            @endif
+            @if ($sale->isCancelled())
+                <div><dt>取消日時</dt><dd>{{ $sale->cancelled_at?->format('Y年m月d日 H:i') }}</dd></div>
+                <div><dt>取消者</dt><dd>{{ $sale->canceller?->name }}</dd></div>
+                <div><dt>取消理由</dt><dd>{{ $sale->cancellation_reason }}</dd></div>
+            @endif
         </dl>
 
         <div class="table-wrapper">

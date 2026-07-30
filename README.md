@@ -97,6 +97,23 @@ Seed のみ再投入:
 ./vendor/bin/sail artisan db:seed
 ```
 
+### 本番環境の設定
+
+本番環境では、例外の詳細や環境情報が画面へ表示されないように `.env` を次のように設定してください。
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+```
+
+設定変更後は、本番環境のコンテナ内で設定キャッシュを再生成してください。
+
+```bash
+php artisan config:cache
+```
+
+`.env` はGitへコミットせず、デプロイ先の環境変数またはシークレット管理機能で管理してください。
+
 ## テスト実行
 
 ```bash
@@ -114,7 +131,7 @@ Seed のみ再投入:
 - MySQL 8.4
 - phpMyAdmin
 - Laravel Fortify 1.37.2
-- Dompdf 3.1.2
+- Laravel Dompdf 3.1.2（Dompdf 3.1.6）
 - Vite 8
 - Tailwind CSS 4
 

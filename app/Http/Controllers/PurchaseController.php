@@ -117,7 +117,7 @@ class PurchaseController extends Controller
         $this->authorize('view', $purchase);
 
         return view('purchases.show', [
-            'purchase' => $purchase->load(['supplier', 'creator', 'confirmer', 'items.product']),
+            'purchase' => $purchase->load(['supplier', 'creator', 'confirmer', 'canceller', 'items.product']),
         ]);
     }
 
@@ -192,21 +192,113 @@ class PurchaseController extends Controller
     public function cancel(Request $request, Purchase $purchase): RedirectResponse
     {
         $this->authorize('cancel', $purchase);
-        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
-        DB::transaction(function () use ($purchase, $data) {
-            $purchase = Purchase::query()->lockForUpdate()->with('items')->findOrFail($purchase->id);
-            if ($purchase->status !== 'confirmed') {
-                throw ValidationException::withMessages(['purchase' => '確定済み伝票のみ取消できます。']);
-            } foreach ($purchase->items as $item) {
-                $stock = Stock::query()->where('product_id', $item->product_id)->lockForUpdate()->firstOrFail();
-                if ($stock->quantity < $item->quantity) {
-                    throw ValidationException::withMessages(['purchase' => '取消に必要な在庫が不足しています。']);
-                } $stock->decrement('quantity', $item->quantity);
-                StockMovement::create(['product_id' => $item->product_id, 'movement_type' => 'purchase_cancel', 'reference_type' => Purchase::class, 'reference_id' => $purchase->id, 'quantity_change' => -$item->quantity, 'unit_cost' => $item->unit_price, 'occurred_at' => now(), 'created_by' => auth()->id()]);
-            }$purchase->update(['status' => 'cancelled', 'cancellation_reason' => $data['reason'], 'cancelled_at' => now(), 'cancelled_by' => auth()->id()]);
-        });
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        DB::transaction(function () use ($purchase, $data): void {
+            $purchase = $this->lockedConfirmedPurchase($purchase);
+            $this->reversePurchaseStock($purchase, 'purchase_cancel');
+            $purchase->update([
+                'status' => Purchase::STATUS_CANCELLED,
+                'cancellation_reason' => $data['reason'],
+                'cancelled_at' => now(),
+                'cancelled_by' => auth()->id(),
+            ]);
+        }, attempts: 3);
 
         return to_route('purchases.show', $purchase)->with('status', '仕入伝票を取消しました。');
+    }
+
+    public function correct(Purchase $purchase): RedirectResponse
+    {
+        $this->authorize('correct', $purchase);
+
+        DB::transaction(function () use ($purchase): void {
+            $purchase = $this->lockedConfirmedPurchase($purchase);
+            $this->reversePurchaseStock($purchase, 'purchase_correction');
+            $purchase->update([
+                'status' => Purchase::STATUS_DRAFT,
+                'confirmed_at' => null,
+                'confirmed_by' => null,
+            ]);
+        }, attempts: 3);
+
+        return to_route('purchases.edit', $purchase)
+            ->with('status', '確定を解除して在庫を戻しました。内容を訂正後、再度確定してください。');
+    }
+
+    private function lockedConfirmedPurchase(Purchase $purchase): Purchase
+    {
+        $lockedPurchase = Purchase::query()
+            ->lockForUpdate()
+            ->with('items')
+            ->findOrFail($purchase->id);
+
+        if (! $lockedPurchase->isConfirmed()) {
+            throw ValidationException::withMessages([
+                'purchase' => '確定済み伝票のみ処理できます。',
+            ]);
+        }
+
+        return $lockedPurchase;
+    }
+
+    private function reversePurchaseStock(Purchase $purchase, string $movementType): void
+    {
+        $items = $purchase->items->groupBy('product_id')->sortKeys();
+        $stocks = Stock::query()
+            ->whereIn('product_id', $items->keys())
+            ->orderBy('product_id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('product_id');
+
+        foreach ($items as $productId => $productItems) {
+            $stock = $stocks->get($productId);
+            $quantity = $productItems->sum('quantity');
+
+            if (! $stock || $stock->quantity < $quantity) {
+                throw ValidationException::withMessages([
+                    'purchase' => '訂正・取消に必要な在庫が不足しています。',
+                ]);
+            }
+
+            $remainingQuantity = $stock->quantity - $quantity;
+            $purchaseCost = $productItems->sum(function ($item): int {
+                return $item->quantity * $this->toCents($item->unit_price);
+            });
+            $remainingCost = max(
+                0,
+                ($stock->quantity * $this->toCents($stock->average_cost)) - $purchaseCost,
+            );
+            $remainingAverageCost = $remainingQuantity === 0
+                ? 0
+                : $this->roundHalfUp($remainingCost, $remainingQuantity);
+
+            $stock->update([
+                'quantity' => $remainingQuantity,
+                'average_cost' => number_format(
+                    $remainingAverageCost / self::CURRENCY_FACTOR,
+                    2,
+                    '.',
+                    '',
+                ),
+            ]);
+
+            foreach ($productItems as $item) {
+                StockMovement::create([
+                    'product_id' => $item->product_id,
+                    'movement_type' => $movementType,
+                    'reference_type' => Purchase::class,
+                    'reference_id' => $purchase->id,
+                    'quantity_change' => -$item->quantity,
+                    'unit_cost' => $item->unit_price,
+                    'occurred_at' => now(),
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
     }
 
     /**

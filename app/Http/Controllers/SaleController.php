@@ -65,7 +65,9 @@ class SaleController extends Controller
     {
         $this->authorize('view', $sale);
 
-        return view('sales.show', ['sale' => $sale->load(['customer', 'creator', 'confirmer', 'items.product'])]);
+        return view('sales.show', [
+            'sale' => $sale->load(['customer', 'creator', 'confirmer', 'canceller', 'items.product']),
+        ]);
     }
 
     public function deliveryNote(Sale $sale): Response
@@ -187,18 +189,91 @@ class SaleController extends Controller
     public function cancel(Request $request, Sale $sale): RedirectResponse
     {
         $this->authorize('cancel', $sale);
-        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
-        DB::transaction(function () use ($sale, $data) {
-            $sale = Sale::query()->lockForUpdate()->with('items')->findOrFail($sale->id);
-            if (! $sale->isConfirmed()) {
-                throw ValidationException::withMessages(['sale' => '確定済み伝票のみ取消できます。']);
-            } foreach ($sale->items as $item) {
-                $stock = Stock::query()->where('product_id', $item->product_id)->lockForUpdate()->firstOrFail();
-                $stock->increment('quantity', $item->quantity);
-                StockMovement::create(['product_id' => $item->product_id, 'movement_type' => 'sale_cancel', 'reference_type' => Sale::class, 'reference_id' => $sale->id, 'quantity_change' => $item->quantity, 'unit_cost' => $item->cost_unit_price, 'occurred_at' => now(), 'created_by' => auth()->id()]);
-            }$sale->update(['status' => Sale::STATUS_CANCELLED, 'cancellation_reason' => $data['reason'], 'cancelled_at' => now(), 'cancelled_by' => auth()->id()]);
-        });
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        DB::transaction(function () use ($sale, $data): void {
+            $sale = $this->lockedConfirmedSale($sale);
+            $this->reverseSaleStock($sale, 'sale_cancel');
+            $sale->update([
+                'status' => Sale::STATUS_CANCELLED,
+                'cancellation_reason' => $data['reason'],
+                'cancelled_at' => now(),
+                'cancelled_by' => auth()->id(),
+            ]);
+        }, attempts: 3);
 
         return to_route('sales.show', $sale)->with('status', '販売伝票を取消しました。');
+    }
+
+    public function correct(Sale $sale): RedirectResponse
+    {
+        $this->authorize('correct', $sale);
+
+        DB::transaction(function () use ($sale): void {
+            $sale = $this->lockedConfirmedSale($sale);
+            $this->reverseSaleStock($sale, 'sale_correction');
+            $sale->update([
+                'status' => Sale::STATUS_DRAFT,
+                'confirmed_at' => null,
+                'confirmed_by' => null,
+            ]);
+        }, attempts: 3);
+
+        return to_route('sales.edit', $sale)
+            ->with('status', '確定を解除して在庫を戻しました。内容を訂正後、再度確定してください。');
+    }
+
+    private function lockedConfirmedSale(Sale $sale): Sale
+    {
+        $lockedSale = Sale::query()
+            ->lockForUpdate()
+            ->with('items')
+            ->findOrFail($sale->id);
+
+        if (! $lockedSale->isConfirmed()) {
+            throw ValidationException::withMessages([
+                'sale' => '確定済み伝票のみ処理できます。',
+            ]);
+        }
+
+        return $lockedSale;
+    }
+
+    private function reverseSaleStock(Sale $sale, string $movementType): void
+    {
+        $items = $sale->items->groupBy('product_id')->sortKeys();
+        $stocks = Stock::query()
+            ->whereIn('product_id', $items->keys())
+            ->orderBy('product_id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('product_id');
+
+        foreach ($items as $productId => $saleItems) {
+            $stock = $stocks->get($productId);
+
+            if (! $stock) {
+                throw ValidationException::withMessages([
+                    'sale' => '対象商品の在庫レコードが見つかりません。',
+                ]);
+            }
+
+            $stock->increment('quantity', $saleItems->sum('quantity'));
+
+            foreach ($saleItems as $item) {
+                StockMovement::create([
+                    'product_id' => $item->product_id,
+                    'movement_type' => $movementType,
+                    'reference_type' => Sale::class,
+                    'reference_id' => $sale->id,
+                    'quantity_change' => $item->quantity,
+                    'unit_cost' => $item->cost_unit_price,
+                    'occurred_at' => now(),
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
     }
 }

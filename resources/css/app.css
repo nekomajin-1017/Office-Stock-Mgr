@@ -224,6 +224,16 @@
         margin: 0;
     }
 
+    .cancel-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .cancel-form .form-control {
+        width: min(240px, 40vw);
+    }
+
     .button,
     .button-link,
     .button-inline {

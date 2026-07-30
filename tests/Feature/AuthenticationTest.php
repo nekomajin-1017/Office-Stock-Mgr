@@ -59,7 +59,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_user_can_log_out(): void
+    public function test_user_cannot_access_protected_screen_after_logout(): void
     {
         $user = User::factory()->create();
 
@@ -68,5 +68,7 @@ class AuthenticationTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
+        $this->get(route('products.index'))
+            ->assertRedirect(route('login'));
     }
 }

@@ -12,6 +12,10 @@
             <p>顧客と販売日を選択してから、商品・数量・販売単価を明細へ入力してください。</p>
         </div>
 
+        @if (session('status'))
+            <p class="success-message">{{ session('status') }}</p>
+        @endif
+
         <form class="transaction-form" action="{{ $isEditing ? route('sales.update', $sale) : route('sales.store') }}" method="post" data-sale-form>
             @csrf
             @if ($isEditing)
@@ -39,7 +43,7 @@
                         <select id="customer-id" class="form-control" name="customer_id" required>
                             <option value="">顧客を選択してください</option>
                             @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}" @selected((string) $customer->id === old('customer_id', $isEditing ? $sale->customer_id : null))>
+                                <option value="{{ $customer->id }}" @selected((string) $customer->id === (string) old('customer_id', $isEditing ? $sale->customer_id : null))>
                                     {{ $customer->code }} / {{ $customer->name }}
                                 </option>
                             @endforeach

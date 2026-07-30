@@ -39,6 +39,11 @@ class SalePolicy
 
     public function cancel(User $user, Sale $sale): bool
     {
-        return $user->is_active && $user->isAdmin();
+        return $user->is_active && $user->isAdmin() && $sale->isConfirmed();
+    }
+
+    public function correct(User $user, Sale $sale): bool
+    {
+        return $user->is_active && $user->isAdmin() && $sale->isConfirmed();
     }
 }

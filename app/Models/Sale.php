@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'created_by',
     'confirmed_at',
     'confirmed_by',
+    'cancellation_reason',
+    'cancelled_at',
+    'cancelled_by',
 ])]
 class Sale extends Model
 {
@@ -60,6 +63,26 @@ class Sale extends Model
         return $this->status === self::STATUS_CONFIRMED;
     }
 
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_DRAFT => '下書き',
+            self::STATUS_CONFIRMED => '確定済み',
+            self::STATUS_CANCELLED => '取消済み',
+            default => $this->status,
+        };
+    }
+
+    public function canceller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
     protected function casts(): array
     {
         return [
@@ -68,6 +91,7 @@ class Sale extends Model
             'tax_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'confirmed_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 }

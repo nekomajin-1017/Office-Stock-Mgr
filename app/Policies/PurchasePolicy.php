@@ -39,6 +39,11 @@ class PurchasePolicy
 
     public function cancel(User $user, Purchase $purchase): bool
     {
-        return $user->is_active && $user->isAdmin();
+        return $user->is_active && $user->isAdmin() && $purchase->isConfirmed();
+    }
+
+    public function correct(User $user, Purchase $purchase): bool
+    {
+        return $user->is_active && $user->isAdmin() && $purchase->isConfirmed();
     }
 }

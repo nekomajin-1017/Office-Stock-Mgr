@@ -12,6 +12,10 @@
             <p>仕入先と仕入日を選択してから、商品・数量・仕入単価を明細へ入力してください。</p>
         </div>
 
+        @if (session('status'))
+            <p class="success-message">{{ session('status') }}</p>
+        @endif
+
         <form class="transaction-form" action="{{ $isEditing ? route('purchases.update', $purchase) : route('purchases.store') }}" method="post" data-purchase-form>
             @csrf
             @if ($isEditing)
@@ -39,7 +43,7 @@
                         <select id="supplier-id" class="form-control" name="supplier_id" required data-purchase-supplier>
                             <option value="">仕入先を選択してください</option>
                             @foreach ($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" @selected((string) $supplier->id === old('supplier_id', $isEditing ? $purchase->supplier_id : null))>
+                                <option value="{{ $supplier->id }}" @selected((string) $supplier->id === (string) old('supplier_id', $isEditing ? $purchase->supplier_id : null))>
                                     {{ $supplier->code }} / {{ $supplier->name }}
                                 </option>
                             @endforeach

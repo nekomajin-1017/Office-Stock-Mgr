@@ -32,7 +32,11 @@ class InventoryWorkflowTest extends TestCase
         [$a,$p,,$stock] = $this->records();
         $this->actingAs($a)->post(route('purchases.confirm', $p));
         $this->actingAs($a)->post(route('purchases.cancel', $p), ['reason' => '誤登録']);
-        $this->assertDatabaseHas('stocks', ['id' => $stock->id, 'quantity' => 0]);
+        $this->assertDatabaseHas('stocks', [
+            'id' => $stock->id,
+            'quantity' => 0,
+            'average_cost' => 0,
+        ]);
     }
 
     public function test_sale_cancellation_restores_stock(): void
@@ -44,12 +48,85 @@ class InventoryWorkflowTest extends TestCase
         $this->assertDatabaseHas('stocks', ['id' => $stock->id, 'quantity' => 5]);
     }
 
-    public function test_non_admin_cannot_cancel(): void
+    public function test_admin_can_return_confirmed_purchase_to_draft_for_correction(): void
     {
-        [$a,$p] = $this->records();
-        $this->actingAs($a)->post(route('purchases.confirm', $p));
-        $user = User::factory()->create(['role' => 'user']);
-        $this->actingAs($user)->post(route('purchases.cancel', $p), ['reason' => 'x'])->assertForbidden();
+        [$admin, $purchase, , $stock] = $this->records();
+        $this->actingAs($admin)->post(route('purchases.confirm', $purchase));
+
+        $this->actingAs($admin)
+            ->post(route('purchases.correct', $purchase))
+            ->assertRedirect(route('purchases.edit', $purchase));
+
+        $this->get(route('purchases.edit', $purchase))
+            ->assertSee('value="'.$purchase->supplier_id.'" selected', escape: false)
+            ->assertSee('value="'.$purchase->items->first()->product_id.'" data-supplier="'.$purchase->supplier_id.'" selected', escape: false);
+
+        $this->assertDatabaseHas('purchases', [
+            'id' => $purchase->id,
+            'status' => Purchase::STATUS_DRAFT,
+            'confirmed_at' => null,
+            'confirmed_by' => null,
+        ]);
+        $this->assertDatabaseHas('stocks', ['id' => $stock->id, 'quantity' => 0]);
+        $this->assertDatabaseHas('stock_movements', [
+            'reference_type' => Purchase::class,
+            'reference_id' => $purchase->id,
+            'movement_type' => 'purchase_correction',
+            'quantity_change' => -5,
+        ]);
+    }
+
+    public function test_admin_can_return_confirmed_sale_to_draft_for_correction(): void
+    {
+        [$admin, $purchase, $sale, $stock] = $this->records();
+        $this->actingAs($admin)->post(route('purchases.confirm', $purchase));
+        $this->actingAs($admin)->post(route('sales.confirm', $sale));
+
+        $this->actingAs($admin)
+            ->post(route('sales.correct', $sale))
+            ->assertRedirect(route('sales.edit', $sale));
+
+        $this->get(route('sales.edit', $sale))
+            ->assertSee('value="'.$sale->customer_id.'" selected', escape: false)
+            ->assertSee('value="'.$sale->items->first()->product_id.'" data-stock="5" selected', escape: false);
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $sale->id,
+            'status' => Sale::STATUS_DRAFT,
+            'confirmed_at' => null,
+            'confirmed_by' => null,
+        ]);
+        $this->assertDatabaseHas('stocks', ['id' => $stock->id, 'quantity' => 5]);
+        $this->assertDatabaseHas('stock_movements', [
+            'reference_type' => Sale::class,
+            'reference_id' => $sale->id,
+            'movement_type' => 'sale_correction',
+            'quantity_change' => 3,
+        ]);
+    }
+
+    public function test_non_admin_cannot_cancel_confirmed_purchase_or_sale(): void
+    {
+        [$admin, $purchase, $sale] = $this->records();
+        $this->actingAs($admin)->post(route('purchases.confirm', $purchase));
+        $this->actingAs($admin)->post(route('sales.confirm', $sale));
+        $generalUser = User::factory()->create(['role' => User::ROLE_USER]);
+
+        $this->actingAs($generalUser)
+            ->post(route('purchases.cancel', $purchase), ['reason' => '権限確認'])
+            ->assertForbidden();
+
+        $this->actingAs($generalUser)
+            ->post(route('sales.cancel', $sale), ['reason' => '権限確認'])
+            ->assertForbidden();
+
+        $this->actingAs($generalUser)
+            ->post(route('purchases.correct', $purchase))
+            ->assertForbidden();
+
+        $this->actingAs($generalUser)
+            ->post(route('sales.correct', $sale))
+            ->assertForbidden();
     }
 
     private function records(): array
