@@ -1,42 +1,66 @@
 # オフィス在庫管理アプリ（OfficeStockMgr）
 
-商品、仕入、販売、在庫を一元管理する Laravel 製の業務アプリケーションです。
+商品・仕入・販売・在庫を一元管理する、Laravel 製の業務アプリケーションです。
 
-仕入・販売伝票の確定と取消に連動して在庫を更新し、在庫履歴や各種レポートを確認できます。
+仕入・販売伝票の確定や取消に連動して在庫を更新し、商品ごとの入出庫履歴や各種レポートを確認できます。
 
-## 機能
+## 主な機能
 
-- ユーザー登録 / ログイン（Laravel Fortify）
-- ロール別アクセス制御（一般ユーザー / 管理者）
+### 共通機能
+
+- ユーザー登録・ログイン（Laravel Fortify）
+- 一般ユーザー／管理者によるロール別アクセス制御
 - 商品の登録・編集・検索・無効化
-- カテゴリ管理（管理者のみ）
 - 仕入先・顧客の登録・編集・検索・有効状態の切替
-- 仕入伝票の下書き登録・編集・削除・確定・取消
-- 販売伝票の下書き登録・編集・削除・確定・取消
-- 仕入・販売の確定および取消に連動した在庫更新
-- 在庫一覧、在庫不足商品の絞り込み、商品別在庫履歴
+- 仕入伝票の下書き登録・編集・削除・確定
+- 販売伝票の下書き登録・編集・削除・確定
+- 伝票の確定に連動した在庫更新
+- 在庫一覧、在庫不足商品の絞り込み、商品別の在庫履歴
 - 確定済み販売伝票の納品書 PDF 出力
 - 未販売商品、最新仕入単価、在庫不足商品、平均販売数超過商品、商品別販売ランキングの表示
-- ユーザー管理（管理者のみ）
 
-### 備考
+### 管理者専用機能
 
-- 仕入・販売伝票は「下書き」「確定済み」「取消済み」の状態で管理します。
-- 在庫とレポートの集計対象は確定済み伝票です。無効商品、下書き伝票、取消済み伝票は除外します。
+- カテゴリ管理
+- ユーザー管理
+- 確定済みの仕入・販売伝票の訂正・取消
+
+### アプリケーション仕様
+
+- 仕入・販売伝票は「下書き」「確定済み」「取消済み」の 3 状態で管理します。
+- 伝票を編集・削除できるのは下書き状態のみです。確定すると在庫へ反映されます。
+- 販売数量が現在庫数を超える場合、販売伝票の登録・確定はできません。
+- 確定済み伝票の訂正・取消は管理者のみ実行できます。訂正時は在庫を戻して下書き状態へ変更し、取消時は理由を記録して在庫を戻します。ただし、仕入後に在庫が払い出されているなど、仕入の取消数量を確保できない場合は訂正・取消できません。
+- 在庫とレポートには確定済み伝票のみを反映します。無効商品、下書き伝票、取消済み伝票は集計対象外です。
+- 在庫の平均原価は移動平均法で算出します。仕入確定時に「（仕入前の在庫数量 × 平均原価）＋ 今回の仕入金額」を仕入後の在庫数量で割り、小数第 2 位まで（第 3 位を四捨五入）保持します。
+- 仕入単価と販売単価は税抜価格として扱います。現時点では消費税計算を実装していないため、税額は 0 円です。
 - 自己登録したユーザーには一般ユーザーロールが付与されます。
-- 管理者専用のログイン画面はありません。一般ユーザーと管理者は同じログイン画面を使用し、ロールに応じて利用可能な機能が変わります。
+- 一般ユーザーと管理者は同じログイン画面を使用し、ロールに応じて利用可能な機能が変わります。
 - メール認証機能は実装していません。
+
+## 使用技術
+
+| 分類 | 技術・バージョン |
+| --- | --- |
+| バックエンド | PHP 8.5、Laravel 13.20.0 |
+| データベース | MySQL 8.4、phpMyAdmin |
+| 認証 | Laravel Fortify 1.37.2 |
+| PDF 出力 | Laravel Dompdf 3.1.2（Dompdf 3.1.6） |
+| フロントエンド | Vite 8、Tailwind CSS 4 |
+| 開発環境 | Laravel Sail、Docker |
+
+バージョンは `compose.yaml`、`composer.lock`、`package-lock.json` に記録された値を基準にしています。
 
 ## セットアップ
 
-### 1. 前提
+### 1. 必要なソフトウェア
 
 - Docker Desktop
 - Git
 
-PHP や Composer をホストへインストールせず、Laravel Sail の Composer イメージを利用する手順です。
+PHP や Composer をホストへインストールする必要はありません。Laravel Sail の Composer イメージを使用します。
 
-### 2. 初期起動
+### 2. リポジトリの取得と依存パッケージのインストール
 
 ```bash
 git clone https://github.com/nekomajin-1017/Office-Stock-Mgr.git
@@ -52,7 +76,9 @@ docker run --rm \
 cp .env.example .env
 ```
 
-`.env` のデータベース設定を次のように変更してください。
+### 3. 環境変数の設定
+
+`.env` のデータベース設定を次の値に変更してください。
 
 ```dotenv
 DB_CONNECTION=mysql
@@ -62,6 +88,8 @@ DB_DATABASE=office_stock_mgr
 DB_USERNAME=sail
 DB_PASSWORD=password
 ```
+
+### 4. アプリケーションの初期化
 
 コンテナを起動し、アプリケーションキー、データベース、フロントエンド資産を準備します。
 
@@ -73,130 +101,88 @@ DB_PASSWORD=password
 ./vendor/bin/sail npm run build
 ```
 
-通常起動:
+初期化が完了したら、<http://localhost> へアクセスしてください。
+
+## よく使うコマンド
+
+### コンテナの起動
 
 ```bash
 ./vendor/bin/sail up -d
 ```
 
-停止:
+### コンテナの停止
 
 ```bash
 ./vendor/bin/sail down
 ```
 
-DB 再作成 + Seed:
+### データベースの再作成と初期データ投入
 
 ```bash
 ./vendor/bin/sail artisan migrate:fresh --seed
 ```
 
-Seed のみ再投入:
+### 初期データのみ再投入
 
 ```bash
 ./vendor/bin/sail artisan db:seed
 ```
 
-### 本番環境の設定
-
-本番環境では、例外の詳細や環境情報が画面へ表示されないように `.env` を次のように設定してください。
-
-```dotenv
-APP_ENV=production
-APP_DEBUG=false
-```
-
-設定変更後は、本番環境のコンテナ内で設定キャッシュを再生成してください。
-
-```bash
-php artisan config:cache
-```
-
-`.env` はGitへコミットせず、デプロイ先の環境変数またはシークレット管理機能で管理してください。
-
-## テスト実行
+### テスト実行
 
 ```bash
 ./vendor/bin/sail test
 ```
 
-## 設計資料
-
-- [ER 図（Draw.io）](./er.drawio)
-
-## 使用技術（実行環境）
-
-- PHP 8.5（Laravel Sail）
-- Laravel 13.20.0
-- MySQL 8.4
-- phpMyAdmin
-- Laravel Fortify 1.37.2
-- Laravel Dompdf 3.1.2（Dompdf 3.1.6）
-- Vite 8
-- Tailwind CSS 4
-
-バージョンは `compose.yaml`、`composer.lock`、`package-lock.json` に記録された値を基準にしています。
-
 ## 主要 URL
 
-- アプリ入口: <http://localhost>
-  - `/` は `/products` にリダイレクトします。
-  - 未ログイン時はログイン画面へ遷移します。
-- ログイン: <http://localhost/login>
-- ユーザー登録: <http://localhost/register>
-- 商品管理: <http://localhost/products>
-- 仕入先管理: <http://localhost/suppliers>
-- 仕入管理: <http://localhost/purchases>
-- 販売管理: <http://localhost/sales>
-- 顧客管理: <http://localhost/customers>
-- 在庫管理: <http://localhost/stocks>
-- レポート: <http://localhost/reports>
-- カテゴリ管理（管理者のみ）: <http://localhost/categories>
-- ユーザー管理（管理者のみ）: <http://localhost/users>
-- phpMyAdmin: <http://localhost:8080>
+| 画面 | URL | 利用権限 |
+| --- | --- | --- |
+| アプリ入口 | <http://localhost> | 全ユーザー |
+| ログイン | <http://localhost/login> | 未ログインユーザー |
+| ユーザー登録 | <http://localhost/register> | 未ログインユーザー |
+| 商品管理 | <http://localhost/products> | 全ユーザー |
+| 仕入先管理 | <http://localhost/suppliers> | 全ユーザー |
+| 仕入管理 | <http://localhost/purchases> | 全ユーザー |
+| 販売管理 | <http://localhost/sales> | 全ユーザー |
+| 顧客管理 | <http://localhost/customers> | 全ユーザー |
+| 在庫管理 | <http://localhost/stocks> | 全ユーザー |
+| レポート | <http://localhost/reports> | 全ユーザー |
+| カテゴリ管理 | <http://localhost/categories> | 管理者のみ |
+| ユーザー管理 | <http://localhost/users> | 管理者のみ |
+| phpMyAdmin | <http://localhost:8080> | 開発用 |
+
+`/` は `/products` へリダイレクトします。未ログインの場合は、ログイン画面へ遷移します。
 
 ## デモユーザー
 
 `./vendor/bin/sail artisan migrate:fresh --seed` の実行後に利用できます。
 
 | ロール | メールアドレス | パスワード |
-|---|---|---|
+| --- | --- | --- |
 | 管理者 | `admin@example.com` | `Coachtech777` |
 | 一般ユーザー | `staff1@example.com` | `Coachtech777` |
 | 一般ユーザー | `staff2@example.com` | `Coachtech777` |
 | 一般ユーザー | `staff3@example.com` | `Coachtech777` |
 
-## レポート仕様
+## 設計資料
 
-### 未販売商品
+- [ER 図（Draw.io）](./er.drawio)
 
-商品ごとに確定済み販売明細が存在しないことを `NOT EXISTS` で判定します。結合結果の `NULL` 判定ではなく存在判定を使うため、販売明細が複数件あっても重複行を作りません。
+## 本番環境の設定
 
-```sql
-SELECT *
-FROM products
-WHERE is_active = 1
-  AND NOT EXISTS (
-      SELECT 1
-      FROM sale_items
-      JOIN sales ON sales.id = sale_items.sale_id
-      WHERE sale_items.product_id = products.id
-        AND sales.status = 'confirmed'
-  );
+本番環境では、例外の詳細や環境情報が画面へ表示されないよう、`.env` を次のように設定してください。
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
 ```
 
-### 最新仕入単価
+設定変更後は、本番環境のコンテナ内で設定キャッシュを再生成します。
 
-商品に紐づく確定済み仕入明細を、仕入日と明細 ID の降順で 1 件に絞る相関サブクエリです。同日に複数の仕入がある場合は、明細 ID が大きいレコードを最新とします。仕入履歴がない商品は `NULL` となり、画面では「仕入履歴なし」と表示します。
+```bash
+php artisan config:cache
+```
 
-### 在庫不足商品
-
-商品と在庫を左結合し、在庫レコードがない商品は `COALESCE` により在庫数 0 として扱います。`現在庫数 <= 発注基準数` の商品を抽出し、`発注基準数 - 現在庫数` を不足数として計算します。
-
-### 販売数量・ランキング
-
-確定済み販売明細を商品ごとに集計するサブクエリで、販売数量と販売金額を算出します。平均販売数超過商品は集計結果の平均値と比較して抽出し、ランキングは販売数量の降順、同数の場合は商品コード順で並べます。対象期間と表示件数は集計時に適用します。
-
-### 在庫一覧 PDF
-
-在庫一覧には検索・絞り込み・ページネーションを備えた業務画面があり、現時点では PDF 出力を実装していません。固定時点の棚卸し帳票などが必要になった場合に追加する想定です。
+`.env` は Git へコミットせず、デプロイ先の環境変数またはシークレット管理機能で管理してください。

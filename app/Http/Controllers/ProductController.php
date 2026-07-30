@@ -20,6 +20,7 @@ class ProductController extends Controller
 
     public function index(Request $request): View
     {
+        // 権限確認後、検索条件で商品を絞り込み、カテゴリと在庫をまとめて一覧表示する。
         $this->authorize('viewAny', Product::class);
 
         $products = Product::query()
@@ -50,6 +51,7 @@ class ProductController extends Controller
 
     public function create(): View
     {
+        // 商品登録権限を確認し、有効なカテゴリ・仕入先を登録画面へ渡す。
         $this->authorize('create', Product::class);
 
         return view('products.form', [
@@ -61,6 +63,7 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
+        // 商品と初期在庫を同一トランザクションで登録し、一覧画面へ戻す。
         DB::transaction(function () use ($request): void {
             $product = Product::create($request->validated());
             $product->stock()->create([
@@ -74,6 +77,7 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
+        // 閲覧権限を確認し、カテゴリと在庫を読み込んだ商品詳細を表示する。
         $this->authorize('view', $product);
 
         return view('products.show', [
@@ -83,6 +87,7 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
+        // 更新権限を確認し、現在値と選択肢を商品編集画面へ渡す。
         $this->authorize('update', $product);
 
         return view('products.form', [
@@ -94,6 +99,7 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        // 対象商品を検証済み入力値で更新し、一覧画面へ戻す。
         $product->update($request->validated());
 
         return to_route('products.index')->with('status', '商品情報を更新しました。');
@@ -101,6 +107,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
+        // 削除権限を確認し、履歴を残すため物理削除せず商品を無効化する。
         $this->authorize('delete', $product);
 
         $product->update(['is_active' => false]);

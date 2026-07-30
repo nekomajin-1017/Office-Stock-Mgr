@@ -28,6 +28,7 @@ class PurchaseController extends Controller
 
     public function index(Request $request): View
     {
+        // 権限確認後、検索条件で仕入伝票を絞り込み、関連情報と一緒にページ表示する。
         $this->authorize('viewAny', Purchase::class);
 
         $purchases = Purchase::query()
@@ -49,6 +50,7 @@ class PurchaseController extends Controller
 
     public function create(): View
     {
+        // 登録権限を確認し、有効な仕入先・商品を仕入伝票登録画面へ渡す。
         $this->authorize('create', Purchase::class);
 
         return view('purchases.form', $this->formData());
@@ -56,6 +58,7 @@ class PurchaseController extends Controller
 
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
+        // 入力明細の金額を計算し、仕入伝票と明細を同一トランザクションで下書き登録する。
         $data = $request->validated();
 
         $purchase = DB::transaction(function () use ($data): Purchase {
@@ -86,6 +89,7 @@ class PurchaseController extends Controller
 
     public function edit(Purchase $purchase): View
     {
+        // 下書きの更新権限を確認し、既存明細と選択肢を編集画面へ渡す。
         $this->authorize('update', $purchase);
 
         return view('purchases.form', $this->formData() + ['purchase' => $purchase->load('items')]);
@@ -93,6 +97,7 @@ class PurchaseController extends Controller
 
     public function update(UpdatePurchaseRequest $request, Purchase $purchase): RedirectResponse
     {
+        // 合計を再計算し、伝票更新と明細の入れ替えを同一トランザクションで実行する。
         $data = $request->validated();
         DB::transaction(function () use ($purchase, $data) {
             $subtotal = collect($data['items'])->sum(fn ($item) => $item['quantity'] * $item['unit_price']);
@@ -106,6 +111,7 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase): RedirectResponse
     {
+        // 下書きの削除権限を確認して伝票を削除し、一覧画面へ戻す。
         $this->authorize('delete', $purchase);
         $purchase->delete();
 
@@ -114,6 +120,7 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase): View
     {
+        // 閲覧権限を確認し、仕入先・担当者・明細を読み込んで詳細画面へ渡す。
         $this->authorize('view', $purchase);
 
         return view('purchases.show', [
@@ -123,6 +130,7 @@ class PurchaseController extends Controller
 
     private function formData(): array
     {
+        // 仕入伝票フォームで使用する有効な仕入先と商品を取得する。
         return [
             'suppliers' => Supplier::active()->orderBy('name')->get(),
             'products' => Product::active()->orderBy('code')->get(),
@@ -131,6 +139,7 @@ class PurchaseController extends Controller
 
     private function purchaseNumber(): string
     {
+        // 日付とランダム文字列から、重複しない仕入伝票番号を生成する。
         do {
             $number = 'PUR-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
         } while (Purchase::query()->where('purchase_number', $number)->exists());
@@ -140,6 +149,7 @@ class PurchaseController extends Controller
 
     public function confirm(Purchase $purchase): RedirectResponse
     {
+        // 確定権限と現在状態を確認し、在庫加算・移動履歴・確定情報を一括更新する。
         $this->authorize('confirm', $purchase);
 
         DB::transaction(function () use ($purchase): void {
@@ -191,6 +201,7 @@ class PurchaseController extends Controller
 
     public function cancel(Request $request, Purchase $purchase): RedirectResponse
     {
+        // 管理者権限と取消理由を確認し、在庫を逆仕訳して伝票を取消済みにする。
         $this->authorize('cancel', $purchase);
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:255'],
@@ -212,6 +223,7 @@ class PurchaseController extends Controller
 
     public function correct(Purchase $purchase): RedirectResponse
     {
+        // 管理者権限を確認し、在庫を逆仕訳して確定済み伝票を編集可能な下書きへ戻す。
         $this->authorize('correct', $purchase);
 
         DB::transaction(function () use ($purchase): void {
@@ -230,6 +242,7 @@ class PurchaseController extends Controller
 
     private function lockedConfirmedPurchase(Purchase $purchase): Purchase
     {
+        // 対象伝票を行ロック付きで再取得し、確定済みであることを保証する。
         $lockedPurchase = Purchase::query()
             ->lockForUpdate()
             ->with('items')
@@ -246,6 +259,7 @@ class PurchaseController extends Controller
 
     private function reversePurchaseStock(Purchase $purchase, string $movementType): void
     {
+        // 商品ごとに在庫数量と平均原価を戻し、取消・訂正の在庫移動履歴を記録する。
         $items = $purchase->items->groupBy('product_id')->sortKeys();
         $stocks = Stock::query()
             ->whereIn('product_id', $items->keys())
@@ -303,6 +317,7 @@ class PurchaseController extends Controller
 
     private function applyPurchaseToStock(Stock $stock, Collection $items, Purchase $purchase): void
     {
+        // 仕入数量を在庫へ加算し、移動平均原価と仕入の在庫移動履歴を更新する。
         $purchaseQuantity = $items->sum('quantity');
         $purchaseCost = $items->sum(function ($item): int {
             return $item->quantity * $this->toCents($item->unit_price);
@@ -332,11 +347,13 @@ class PurchaseController extends Controller
 
     private function toCents(string|float|int $amount): int
     {
+        // 金額を浮動小数点誤差なく計算するため、円単位の値を整数の銭へ変換する。
         return (int) round((float) $amount * self::CURRENCY_FACTOR, 0, PHP_ROUND_HALF_UP);
     }
 
     private function roundHalfUp(int $amount, int $quantity): int
     {
+        // 整数除算を使い、数量あたりの金額を四捨五入する。
         return intdiv($amount + intdiv($quantity, 2), $quantity);
     }
 }

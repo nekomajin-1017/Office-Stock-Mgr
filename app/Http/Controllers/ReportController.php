@@ -15,6 +15,7 @@ class ReportController extends Controller
 
     public function index(Request $request): View
     {
+        // 権限確認と検索条件の正規化後、各集計クエリを実行してレポート画面へ渡す。
         $this->authorize('viewAny', Product::class);
 
         $from = $request->string('from')->toString();
@@ -69,6 +70,7 @@ class ReportController extends Controller
 
     private function salesTotalsQuery(string $from, string $to)
     {
+        // 確定済み販売明細を期間で絞り込み、商品別の販売数量と販売金額を集計する。
         $query = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->where('sales.status', 'confirmed');
@@ -90,6 +92,7 @@ class ReportController extends Controller
 
     private function unsoldProducts()
     {
+        // 確定済みの販売実績が存在しない有効商品を抽出する。
         return Product::query()
             ->active()
             ->whereNotExists(function ($query): void {
@@ -105,6 +108,7 @@ class ReportController extends Controller
 
     private function latestPurchaseProducts()
     {
+        // 商品ごとに直近の確定仕入明細を相関サブクエリで取得する。
         $latestPurchasePrice = DB::table('purchase_items')
             ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
             ->whereColumn('purchase_items.product_id', 'products.id')
@@ -124,6 +128,7 @@ class ReportController extends Controller
 
     private function shortageProducts()
     {
+        // 現在庫が発注点以下の商品を不足数の多い順で取得する。
         return Product::query()
             ->active()
             ->leftJoin('stocks', 'stocks.product_id', '=', 'products.id')

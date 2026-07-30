@@ -16,6 +16,7 @@ class CustomerController extends Controller
 
     public function index(Request $request): View
     {
+        // 権限確認後、キーワードと有効状態で顧客を絞り込み、コード順でページ表示する。
         $this->authorize('viewAny', Customer::class);
 
         $customers = Customer::query()
@@ -39,6 +40,7 @@ class CustomerController extends Controller
 
     public function create(): View
     {
+        // 顧客の登録権限を確認し、空の顧客モデルを登録画面へ渡す。
         $this->authorize('create', Customer::class);
 
         return view('customers.form', ['customer' => new Customer]);
@@ -46,6 +48,7 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request): RedirectResponse
     {
+        // 検証済み入力値から顧客を登録し、一覧画面へ戻す。
         Customer::create($request->validated());
 
         return to_route('customers.index')->with('status', '顧客を登録しました。');
@@ -53,6 +56,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): View
     {
+        // 対象顧客の更新権限を確認し、現在値を編集画面へ渡す。
         $this->authorize('update', $customer);
 
         return view('customers.form', compact('customer'));
@@ -60,6 +64,7 @@ class CustomerController extends Controller
 
     public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
+        // 対象顧客を検証済み入力値で更新し、一覧画面へ戻す。
         $customer->update($request->validated());
 
         return to_route('customers.index')->with('status', '顧客情報を更新しました。');
@@ -67,6 +72,7 @@ class CustomerController extends Controller
 
     public function toggleStatus(Customer $customer): RedirectResponse
     {
+        // 更新権限を確認し、有効・無効を反転して結果に応じたメッセージを返す。
         $this->authorize('update', $customer);
 
         $customer->update(['is_active' => ! $customer->is_active]);

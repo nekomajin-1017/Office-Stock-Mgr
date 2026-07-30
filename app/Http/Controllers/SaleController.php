@@ -25,6 +25,7 @@ class SaleController extends Controller
 
     public function index(Request $request): View
     {
+        // 権限確認後、検索条件で販売伝票を絞り込み、関連情報と一緒にページ表示する。
         $this->authorize('viewAny', Sale::class);
         $sales = Sale::query()->with(['customer', 'creator'])
             ->when($request->filled('sale_number'), fn (Builder $q) => $q->where('sale_number', 'like', '%'.$request->string('sale_number').'%'))
@@ -39,6 +40,7 @@ class SaleController extends Controller
 
     public function create(): View
     {
+        // 登録権限を確認し、有効な顧客・商品を販売伝票登録画面へ渡す。
         $this->authorize('create', Sale::class);
 
         return view('sales.form', $this->formData());
@@ -46,6 +48,7 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request): RedirectResponse
     {
+        // 入力時点の在庫を確認し、金額計算済みの販売伝票と明細を下書き登録する。
         $data = $request->validated();
         $this->ensureSufficientStock($data['items']);
 
@@ -63,6 +66,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale): View
     {
+        // 閲覧権限を確認し、顧客・担当者・明細を読み込んで詳細画面へ渡す。
         $this->authorize('view', $sale);
 
         return view('sales.show', [
@@ -72,6 +76,7 @@ class SaleController extends Controller
 
     public function deliveryNote(Sale $sale): Response
     {
+        // 確定済み伝票であることを確認し、顧客・明細を使って納品書PDFを生成する。
         $this->authorize('view', $sale);
 
         abort_unless($sale->isConfirmed(), 403, '確定済みの販売伝票のみ納品書を出力できます。');
@@ -88,6 +93,7 @@ class SaleController extends Controller
 
     public function edit(Sale $sale): View
     {
+        // 下書きの更新権限を確認し、既存明細と選択肢を編集画面へ渡す。
         $this->authorize('update', $sale);
 
         return view('sales.form', $this->formData() + ['sale' => $sale->load('items')]);
@@ -95,6 +101,7 @@ class SaleController extends Controller
 
     public function update(UpdateSaleRequest $request, Sale $sale): RedirectResponse
     {
+        // 在庫確認と金額再計算後、伝票更新と明細の入れ替えを一括実行する。
         $data = $request->validated();
         $this->ensureSufficientStock($data['items']);
 
@@ -117,6 +124,7 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale): RedirectResponse
     {
+        // 下書きの削除権限を確認して伝票を削除し、一覧画面へ戻す。
         $this->authorize('delete', $sale);
 
         DB::transaction(function () use ($sale): void {
@@ -128,6 +136,7 @@ class SaleController extends Controller
 
     private function formData(): array
     {
+        // 販売伝票フォームで使用する有効な顧客と在庫情報付き商品を取得する。
         return [
             'customers' => Customer::active()->orderBy('name')->get(),
             'products' => Product::active()->with('stock')->orderBy('code')->get(),
@@ -136,6 +145,7 @@ class SaleController extends Controller
 
     private function ensureSufficientStock(array $items): void
     {
+        // 商品ごとの現在庫と入力数量を比較し、不足している明細へエラーを設定する。
         $products = Product::query()
             ->with('stock')
             ->whereIn('id', collect($items)->pluck('product_id'))
@@ -155,6 +165,7 @@ class SaleController extends Controller
 
     private function saleItems(array $items)
     {
+        // 入力明細へ原価・小計・税額の初期値を付加し、保存可能な配列へ変換する。
         return collect($items)->map(fn (array $item): array => [
             ...$item,
             'cost_unit_price' => 0,
@@ -166,6 +177,7 @@ class SaleController extends Controller
 
     public function confirm(Sale $sale): RedirectResponse
     {
+        // 確定権限と現在状態を確認し、在庫減算・移動履歴・確定情報を一括更新する。
         $this->authorize('confirm', $sale);
         DB::transaction(function () use ($sale): void {
             $sale = Sale::query()->lockForUpdate()->with('items')->findOrFail($sale->id);
@@ -188,6 +200,7 @@ class SaleController extends Controller
 
     public function cancel(Request $request, Sale $sale): RedirectResponse
     {
+        // 管理者権限と取消理由を確認し、販売数量を在庫へ戻して伝票を取消済みにする。
         $this->authorize('cancel', $sale);
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:255'],
@@ -209,6 +222,7 @@ class SaleController extends Controller
 
     public function correct(Sale $sale): RedirectResponse
     {
+        // 管理者権限を確認し、販売数量を在庫へ戻して確定済み伝票を下書きへ戻す。
         $this->authorize('correct', $sale);
 
         DB::transaction(function () use ($sale): void {
@@ -227,6 +241,7 @@ class SaleController extends Controller
 
     private function lockedConfirmedSale(Sale $sale): Sale
     {
+        // 対象伝票を行ロック付きで再取得し、確定済みであることを保証する。
         $lockedSale = Sale::query()
             ->lockForUpdate()
             ->with('items')
@@ -243,6 +258,7 @@ class SaleController extends Controller
 
     private function reverseSaleStock(Sale $sale, string $movementType): void
     {
+        // 商品ごとに販売数量を在庫へ戻し、取消・訂正の在庫移動履歴を記録する。
         $items = $sale->items->groupBy('product_id')->sortKeys();
         $stocks = Stock::query()
             ->whereIn('product_id', $items->keys())
