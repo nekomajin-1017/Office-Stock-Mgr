@@ -94,7 +94,7 @@ DB_PASSWORD=password
 コンテナを起動し、アプリケーションキー、データベース、フロントエンド資産を準備します。
 
 ```bash
-./vendor/bin/sail up -d
+./vendor/bin/sail up -d --wait
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan migrate:fresh --seed
 ./vendor/bin/sail npm install
