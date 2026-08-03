@@ -18,22 +18,25 @@ class ReportController extends Controller
         // 権限確認と検索条件の正規化後、各集計クエリを実行してレポート画面へ渡す。
         $this->authorize('viewAny', Product::class);
 
-        $from = $request->string('from')->toString();
-        $to = $request->string('to')->toString();
+        $startDate = $request->string('from')->toString();
+        $endDate = $request->string('to')->toString();
         $limit = min(
             max($request->integer('limit', self::DEFAULT_RANKING_LIMIT), 1),
             self::MAX_RANKING_LIMIT,
         );
 
-        $salesTotals = $this->salesTotalsQuery($from, $to);
+        $salesTotals = $this->buildSalesTotalsQuery($startDate, $endDate);
+
+        // 商品別の確定済み販売数量から平均を算出する。販売実績がない商品は平均計算の対象外とする。
         $averageSalesQuantity = (float) (DB::query()
             ->fromSub($salesTotals, 'sales_totals')
             ->avg('sales_quantity') ?? 0);
 
+        // 同じ商品別集計と平均を比較し、販売実績があり平均販売数を上回る有効商品だけを抽出する。
         $aboveAverageProducts = Product::query()
             ->active()
-            ->joinSub(clone $salesTotals, 'sales_totals', function ($join): void {
-                $join->on('products.id', '=', 'sales_totals.product_id');
+            ->joinSub(clone $salesTotals, 'sales_totals', function ($salesTotalsJoin): void {
+                $salesTotalsJoin->on('products.id', '=', 'sales_totals.product_id');
             })
             ->whereRaw(
                 'CAST(sales_totals.sales_quantity AS DECIMAL(15, 4)) > ?',
@@ -44,10 +47,11 @@ class ReportController extends Controller
             ->orderBy('products.code')
             ->get();
 
+        // 期間内の販売数量・販売金額を商品別に集計し、販売数量の上位から指定件数を取得する。
         $salesRanking = Product::query()
             ->active()
-            ->joinSub(clone $salesTotals, 'sales_totals', function ($join): void {
-                $join->on('products.id', '=', 'sales_totals.product_id');
+            ->joinSub(clone $salesTotals, 'sales_totals', function ($salesTotalsJoin): void {
+                $salesTotalsJoin->on('products.id', '=', 'sales_totals.product_id');
             })
             ->select('products.*', 'sales_totals.sales_quantity', 'sales_totals.sales_amount')
             ->orderByDesc('sales_totals.sales_quantity')
@@ -61,26 +65,26 @@ class ReportController extends Controller
             'shortageProducts' => $this->shortageProducts(),
             'aboveAverageProducts' => $aboveAverageProducts,
             'salesRanking' => $salesRanking,
-            'from' => $from,
-            'to' => $to,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'limit' => $limit,
             'averageSalesQuantity' => $averageSalesQuantity,
         ]);
     }
 
-    private function salesTotalsQuery(string $from, string $to)
+    private function buildSalesTotalsQuery(string $startDate, string $endDate)
     {
-        // 確定済み販売明細を期間で絞り込み、商品別の販売数量と販売金額を集計する。
+        // 確定済み販売明細を対象期間で絞り込み、商品別の販売数量と販売金額を集計する。
         $query = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->where('sales.status', 'confirmed');
 
-        if ($from !== '') {
-            $query->whereDate('sales.sale_date', '>=', $from);
+        if ($startDate !== '') {
+            $query->whereDate('sales.sale_date', '>=', $startDate);
         }
 
-        if ($to !== '') {
-            $query->whereDate('sales.sale_date', '<=', $to);
+        if ($endDate !== '') {
+            $query->whereDate('sales.sale_date', '<=', $endDate);
         }
 
         return $query
@@ -92,11 +96,12 @@ class ReportController extends Controller
 
     private function unsoldProducts()
     {
-        // 確定済みの販売実績が存在しない有効商品を抽出する。
+        // NOT EXISTSで確定済み販売明細が存在しない有効商品だけを抽出する。
+        // 下書き・取消済みの販売伝票は販売実績に含めない。
         return Product::query()
             ->active()
-            ->whereNotExists(function ($query): void {
-                $query->selectRaw('1')
+            ->whereNotExists(function ($confirmedSalesQuery): void {
+                $confirmedSalesQuery->selectRaw('1')
                     ->from('sale_items')
                     ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
                     ->whereColumn('sale_items.product_id', 'products.id')
@@ -108,7 +113,8 @@ class ReportController extends Controller
 
     private function latestPurchaseProducts()
     {
-        // 商品ごとに直近の確定仕入明細を相関サブクエリで取得する。
+        // 相関サブクエリで商品ごとの確定仕入を仕入日・明細IDの降順に並べ、先頭の単価を取得する。
+        // 同日に複数の仕入明細がある場合は、明細IDが大きい方を最新として扱う。
         $latestPurchasePrice = DB::table('purchase_items')
             ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
             ->whereColumn('purchase_items.product_id', 'products.id')
@@ -128,7 +134,8 @@ class ReportController extends Controller
 
     private function shortageProducts()
     {
-        // 現在庫が発注点以下の商品を不足数の多い順で取得する。
+        // 商品と在庫をLEFT JOINし、在庫レコードがない商品はCOALESCEで現在庫数を0として扱う。
+        // 現在庫数が発注基準数以下の商品について、基準数との差分を不足数として算出する。
         return Product::query()
             ->active()
             ->leftJoin('stocks', 'stocks.product_id', '=', 'products.id')

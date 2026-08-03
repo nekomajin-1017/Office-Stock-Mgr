@@ -48,7 +48,7 @@ class PurchaseRegistrationTest extends TestCase
     {
         [$user, $supplier, $product] = $this->createCandidates();
 
-        $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $product, 0, -1))
+        $this->actingAs($user)->post(route('purchases.store'), $this->createPurchasePayload($supplier, $product, 0, -1))
             ->assertSessionHasErrors(['items.0.quantity', 'items.0.unit_price']);
     }
 
@@ -57,7 +57,7 @@ class PurchaseRegistrationTest extends TestCase
         [$user, $supplier, $product] = $this->createCandidates();
         $inactiveProduct = $this->createProduct($product->category, $supplier, 'P-002', '無効商品', false);
 
-        $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $inactiveProduct))
+        $this->actingAs($user)->post(route('purchases.store'), $this->createPurchasePayload($supplier, $inactiveProduct))
             ->assertSessionHasErrors('items.0.product_id');
     }
 
@@ -65,7 +65,7 @@ class PurchaseRegistrationTest extends TestCase
     {
         [$user, $supplier, $product] = $this->createCandidates();
 
-        $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $product))
+        $this->actingAs($user)->post(route('purchases.store'), $this->createPurchasePayload($supplier, $product))
             ->assertRedirect();
 
         $this->assertDatabaseHas('purchases', ['supplier_id' => $supplier->id, 'status' => 'draft', 'created_by' => $user->id]);
@@ -77,10 +77,10 @@ class PurchaseRegistrationTest extends TestCase
         [$user, $supplier, $product] = $this->createCandidates();
         $secondProduct = $this->createProduct($product->category, $supplier, 'P-002', '商品2', true);
         Stock::create(['product_id' => $secondProduct->id, 'quantity' => 0, 'average_cost' => 0]);
-        $payload = $this->payload($supplier, $product, 2, 150);
-        $payload['items'][] = ['product_id' => $secondProduct->id, 'quantity' => 3, 'unit_price' => 200];
+        $purchasePayload = $this->createPurchasePayload($supplier, $product, 2, 150);
+        $purchasePayload['items'][] = ['product_id' => $secondProduct->id, 'quantity' => 3, 'unit_price' => 200];
 
-        $this->actingAs($user)->post(route('purchases.store'), $payload);
+        $this->actingAs($user)->post(route('purchases.store'), $purchasePayload);
 
         $purchase = Purchase::firstOrFail();
         $this->assertSame('900.00', $purchase->fresh()->total_amount);
@@ -91,7 +91,7 @@ class PurchaseRegistrationTest extends TestCase
     {
         [$user, $supplier, $product] = $this->createCandidates();
 
-        $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $product, 5, 100));
+        $this->actingAs($user)->post(route('purchases.store'), $this->createPurchasePayload($supplier, $product, 5, 100));
 
         $this->assertDatabaseHas('stocks', ['product_id' => $product->id, 'quantity' => 0, 'average_cost' => 0]);
     }
@@ -103,7 +103,7 @@ class PurchaseRegistrationTest extends TestCase
         $this->withoutExceptionHandling();
 
         try {
-            $this->actingAs($user)->post(route('purchases.store'), $this->payload($supplier, $product));
+            $this->actingAs($user)->post(route('purchases.store'), $this->createPurchasePayload($supplier, $product));
             $this->fail('明細作成失敗時は例外になる必要があります。');
         } catch (RuntimeException) {
             $this->assertDatabaseCount('purchases', 0);
@@ -124,20 +124,20 @@ class PurchaseRegistrationTest extends TestCase
         return [$user, $supplier, $product];
     }
 
-    private function createProduct(Category $category, Supplier $supplier, string $code, string $name, bool $active): Product
+    private function createProduct(Category $category, Supplier $supplier, string $productCode, string $productName, bool $isActive): Product
     {
         return Product::factory()->create([
             'category_id' => $category->id,
             'supplier_id' => $supplier->id,
-            'code' => $code,
-            'name' => $name,
+            'code' => $productCode,
+            'name' => $productName,
             'standard_sale_price' => 100,
             'reorder_level' => 1,
-            'is_active' => $active,
+            'is_active' => $isActive,
         ]);
     }
 
-    private function payload(Supplier $supplier, Product $product, int $quantity = 1, int $unitPrice = 100): array
+    private function createPurchasePayload(Supplier $supplier, Product $product, int $quantity = 1, int $unitPrice = 100): array
     {
         return ['supplier_id' => $supplier->id, 'purchase_date' => '2026-07-28', 'items' => [['product_id' => $product->id, 'quantity' => $quantity, 'unit_price' => $unitPrice]]];
     }

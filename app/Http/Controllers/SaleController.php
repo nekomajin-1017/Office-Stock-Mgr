@@ -28,11 +28,11 @@ class SaleController extends Controller
         // 権限確認後、検索条件で販売伝票を絞り込み、関連情報と一緒にページ表示する。
         $this->authorize('viewAny', Sale::class);
         $sales = Sale::query()->with(['customer', 'creator'])
-            ->when($request->filled('sale_number'), fn (Builder $q) => $q->where('sale_number', 'like', '%'.$request->string('sale_number').'%'))
-            ->when($request->filled('customer_id'), fn (Builder $q) => $q->where('customer_id', $request->integer('customer_id')))
-            ->when($request->filled('date_from'), fn (Builder $q) => $q->whereDate('sale_date', '>=', $request->date('date_from')))
-            ->when($request->filled('date_to'), fn (Builder $q) => $q->whereDate('sale_date', '<=', $request->date('date_to')))
-            ->when($request->filled('status'), fn (Builder $q) => $q->where('status', $request->status))
+            ->when($request->filled('sale_number'), fn (Builder $salesQuery) => $salesQuery->where('sale_number', 'like', '%'.$request->string('sale_number').'%'))
+            ->when($request->filled('customer_id'), fn (Builder $salesQuery) => $salesQuery->where('customer_id', $request->integer('customer_id')))
+            ->when($request->filled('date_from'), fn (Builder $salesQuery) => $salesQuery->whereDate('sale_date', '>=', $request->date('date_from')))
+            ->when($request->filled('date_to'), fn (Builder $salesQuery) => $salesQuery->whereDate('sale_date', '<=', $request->date('date_to')))
+            ->when($request->filled('status'), fn (Builder $salesQuery) => $salesQuery->where('status', $request->status))
             ->latest('sale_date')->paginate(self::SALES_PER_PAGE)->withQueryString();
 
         return view('sales.index', ['sales' => $sales, 'customers' => Customer::query()->orderBy('name')->get()]);
@@ -49,14 +49,14 @@ class SaleController extends Controller
     public function store(StoreSaleRequest $request): RedirectResponse
     {
         // 入力時点の在庫を確認し、金額計算済みの販売伝票と明細を下書き登録する。
-        $data = $request->validated();
-        $this->ensureSufficientStock($data['items']);
+        $validatedSaleData = $request->validated();
+        $this->ensureSufficientStock($validatedSaleData['items']);
 
-        $sale = DB::transaction(function () use ($data): Sale {
-            $items = $this->saleItems($data['items']);
-            $subtotal = $items->sum('subtotal');
-            $sale = Sale::create(['sale_number' => 'SAL-'.now()->format('Ymd').'-'.Str::upper(Str::random(8)), 'customer_id' => $data['customer_id'], 'sale_date' => $data['sale_date'], 'status' => Sale::STATUS_DRAFT, 'subtotal' => $subtotal, 'tax_amount' => 0, 'total_amount' => $subtotal, 'created_by' => auth()->id()]);
-            $sale->items()->createMany($items->all());
+        $sale = DB::transaction(function () use ($validatedSaleData): Sale {
+            $saleItems = $this->prepareSaleItemsForStorage($validatedSaleData['items']);
+            $subtotal = $saleItems->sum('subtotal');
+            $sale = Sale::create(['sale_number' => 'SAL-'.now()->format('Ymd').'-'.Str::upper(Str::random(8)), 'customer_id' => $validatedSaleData['customer_id'], 'sale_date' => $validatedSaleData['sale_date'], 'status' => Sale::STATUS_DRAFT, 'subtotal' => $subtotal, 'tax_amount' => 0, 'total_amount' => $subtotal, 'created_by' => auth()->id()]);
+            $sale->items()->createMany($saleItems->all());
 
             return $sale;
         });
@@ -102,21 +102,21 @@ class SaleController extends Controller
     public function update(UpdateSaleRequest $request, Sale $sale): RedirectResponse
     {
         // 在庫確認と金額再計算後、伝票更新と明細の入れ替えを一括実行する。
-        $data = $request->validated();
-        $this->ensureSufficientStock($data['items']);
+        $validatedSaleData = $request->validated();
+        $this->ensureSufficientStock($validatedSaleData['items']);
 
-        DB::transaction(function () use ($sale, $data): void {
-            $items = $this->saleItems($data['items']);
-            $subtotal = $items->sum('subtotal');
+        DB::transaction(function () use ($sale, $validatedSaleData): void {
+            $saleItems = $this->prepareSaleItemsForStorage($validatedSaleData['items']);
+            $subtotal = $saleItems->sum('subtotal');
 
             $sale->update([
-                'customer_id' => $data['customer_id'],
-                'sale_date' => $data['sale_date'],
+                'customer_id' => $validatedSaleData['customer_id'],
+                'sale_date' => $validatedSaleData['sale_date'],
                 'subtotal' => $subtotal,
                 'total_amount' => $subtotal,
             ]);
             $sale->items()->delete();
-            $sale->items()->createMany($items->all());
+            $sale->items()->createMany($saleItems->all());
         });
 
         return to_route('sales.show', $sale)->with('status', '下書き伝票を更新しました。');
@@ -163,13 +163,13 @@ class SaleController extends Controller
         }
     }
 
-    private function saleItems(array $items)
+    private function prepareSaleItemsForStorage(array $saleItems)
     {
         // 入力明細へ原価・小計・税額の初期値を付加し、保存可能な配列へ変換する。
-        return collect($items)->map(fn (array $item): array => [
-            ...$item,
+        return collect($saleItems)->map(fn (array $saleItem): array => [
+            ...$saleItem,
             'cost_unit_price' => 0,
-            'subtotal' => $item['quantity'] * $item['unit_price'],
+            'subtotal' => $saleItem['quantity'] * $saleItem['unit_price'],
             'cost_amount' => 0,
             'tax_amount' => 0,
         ]);
@@ -202,16 +202,16 @@ class SaleController extends Controller
     {
         // 管理者権限と取消理由を確認し、販売数量を在庫へ戻して伝票を取消済みにする。
         $this->authorize('cancel', $sale);
-        $data = $request->validate([
+        $validatedCancellationData = $request->validate([
             'reason' => ['required', 'string', 'max:255'],
         ]);
 
-        DB::transaction(function () use ($sale, $data): void {
+        DB::transaction(function () use ($sale, $validatedCancellationData): void {
             $sale = $this->lockedConfirmedSale($sale);
             $this->reverseSaleStock($sale, 'sale_cancel');
             $sale->update([
                 'status' => Sale::STATUS_CANCELLED,
-                'cancellation_reason' => $data['reason'],
+                'cancellation_reason' => $validatedCancellationData['reason'],
                 'cancelled_at' => now(),
                 'cancelled_by' => auth()->id(),
             ]);

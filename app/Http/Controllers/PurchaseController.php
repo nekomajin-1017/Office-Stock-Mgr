@@ -59,27 +59,27 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         // 入力明細の金額を計算し、仕入伝票と明細を同一トランザクションで下書き登録する。
-        $data = $request->validated();
+        $validatedPurchaseData = $request->validated();
 
-        $purchase = DB::transaction(function () use ($data): Purchase {
+        $purchase = DB::transaction(function () use ($validatedPurchaseData): Purchase {
             $subtotal = 0;
-            $items = collect($data['items'])->map(function (array $item) use (&$subtotal): array {
-                $lineSubtotal = $item['quantity'] * (float) $item['unit_price'];
+            $purchaseItems = collect($validatedPurchaseData['items'])->map(function (array $purchaseItem) use (&$subtotal): array {
+                $lineSubtotal = $purchaseItem['quantity'] * (float) $purchaseItem['unit_price'];
                 $subtotal += $lineSubtotal;
 
-                return [...$item, 'subtotal' => $lineSubtotal, 'tax_amount' => 0];
+                return [...$purchaseItem, 'subtotal' => $lineSubtotal, 'tax_amount' => 0];
             });
             $purchase = Purchase::create([
-                'purchase_number' => $this->purchaseNumber(),
-                'supplier_id' => $data['supplier_id'],
-                'purchase_date' => $data['purchase_date'],
+                'purchase_number' => $this->generateUniquePurchaseNumber(),
+                'supplier_id' => $validatedPurchaseData['supplier_id'],
+                'purchase_date' => $validatedPurchaseData['purchase_date'],
                 'status' => Purchase::STATUS_DRAFT,
                 'subtotal' => $subtotal,
                 'tax_amount' => 0,
                 'total_amount' => $subtotal,
                 'created_by' => auth()->id(),
             ]);
-            $purchase->items()->createMany($items->all());
+            $purchase->items()->createMany($purchaseItems->all());
 
             return $purchase;
         });
@@ -98,12 +98,12 @@ class PurchaseController extends Controller
     public function update(UpdatePurchaseRequest $request, Purchase $purchase): RedirectResponse
     {
         // 合計を再計算し、伝票更新と明細の入れ替えを同一トランザクションで実行する。
-        $data = $request->validated();
-        DB::transaction(function () use ($purchase, $data) {
-            $subtotal = collect($data['items'])->sum(fn ($item) => $item['quantity'] * $item['unit_price']);
-            $purchase->update(['supplier_id' => $data['supplier_id'], 'purchase_date' => $data['purchase_date'], 'subtotal' => $subtotal, 'total_amount' => $subtotal]);
+        $validatedPurchaseData = $request->validated();
+        DB::transaction(function () use ($purchase, $validatedPurchaseData) {
+            $subtotal = collect($validatedPurchaseData['items'])->sum(fn ($purchaseItem) => $purchaseItem['quantity'] * $purchaseItem['unit_price']);
+            $purchase->update(['supplier_id' => $validatedPurchaseData['supplier_id'], 'purchase_date' => $validatedPurchaseData['purchase_date'], 'subtotal' => $subtotal, 'total_amount' => $subtotal]);
             $purchase->items()->delete();
-            $purchase->items()->createMany(collect($data['items'])->map(fn ($item) => [...$item, 'subtotal' => $item['quantity'] * $item['unit_price'], 'tax_amount' => 0])->all());
+            $purchase->items()->createMany(collect($validatedPurchaseData['items'])->map(fn ($purchaseItem) => [...$purchaseItem, 'subtotal' => $purchaseItem['quantity'] * $purchaseItem['unit_price'], 'tax_amount' => 0])->all());
         });
 
         return to_route('purchases.show', $purchase)->with('status', '下書き伝票を更新しました。');
@@ -137,14 +137,14 @@ class PurchaseController extends Controller
         ];
     }
 
-    private function purchaseNumber(): string
+    private function generateUniquePurchaseNumber(): string
     {
         // 日付とランダム文字列から、重複しない仕入伝票番号を生成する。
         do {
-            $number = 'PUR-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
-        } while (Purchase::query()->where('purchase_number', $number)->exists());
+            $purchaseNumber = 'PUR-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
+        } while (Purchase::query()->where('purchase_number', $purchaseNumber)->exists());
 
-        return $number;
+        return $purchaseNumber;
     }
 
     public function confirm(Purchase $purchase): RedirectResponse
@@ -203,16 +203,16 @@ class PurchaseController extends Controller
     {
         // 管理者権限と取消理由を確認し、在庫を逆仕訳して伝票を取消済みにする。
         $this->authorize('cancel', $purchase);
-        $data = $request->validate([
+        $validatedCancellationData = $request->validate([
             'reason' => ['required', 'string', 'max:255'],
         ]);
 
-        DB::transaction(function () use ($purchase, $data): void {
+        DB::transaction(function () use ($purchase, $validatedCancellationData): void {
             $purchase = $this->lockedConfirmedPurchase($purchase);
             $this->reversePurchaseStock($purchase, 'purchase_cancel');
             $purchase->update([
                 'status' => Purchase::STATUS_CANCELLED,
-                'cancellation_reason' => $data['reason'],
+                'cancellation_reason' => $validatedCancellationData['reason'],
                 'cancelled_at' => now(),
                 'cancelled_by' => auth()->id(),
             ]);
@@ -280,15 +280,15 @@ class PurchaseController extends Controller
 
             $remainingQuantity = $stock->quantity - $quantity;
             $purchaseCost = $productItems->sum(function ($item): int {
-                return $item->quantity * $this->toCents($item->unit_price);
+                return $item->quantity * $this->convertToCents($item->unit_price);
             });
             $remainingCost = max(
                 0,
-                ($stock->quantity * $this->toCents($stock->average_cost)) - $purchaseCost,
+                ($stock->quantity * $this->convertToCents($stock->average_cost)) - $purchaseCost,
             );
             $remainingAverageCost = $remainingQuantity === 0
                 ? 0
-                : $this->roundHalfUp($remainingCost, $remainingQuantity);
+                : $this->calculateRoundedUnitAmount($remainingCost, $remainingQuantity);
 
             $stock->update([
                 'quantity' => $remainingQuantity,
@@ -320,11 +320,11 @@ class PurchaseController extends Controller
         // 仕入数量を在庫へ加算し、移動平均原価と仕入の在庫移動履歴を更新する。
         $purchaseQuantity = $items->sum('quantity');
         $purchaseCost = $items->sum(function ($item): int {
-            return $item->quantity * $this->toCents($item->unit_price);
+            return $item->quantity * $this->convertToCents($item->unit_price);
         });
-        $currentCost = $stock->quantity * $this->toCents($stock->average_cost);
+        $currentCost = $stock->quantity * $this->convertToCents($stock->average_cost);
         $newQuantity = $stock->quantity + $purchaseQuantity;
-        $newAverageCost = $this->roundHalfUp($currentCost + $purchaseCost, $newQuantity);
+        $newAverageCost = $this->calculateRoundedUnitAmount($currentCost + $purchaseCost, $newQuantity);
 
         $stock->update([
             'quantity' => $newQuantity,
@@ -345,15 +345,15 @@ class PurchaseController extends Controller
         }
     }
 
-    private function toCents(string|float|int $amount): int
+    private function convertToCents(string|float|int $monetaryAmount): int
     {
         // 金額を浮動小数点誤差なく計算するため、円単位の値を整数の銭へ変換する。
-        return (int) round((float) $amount * self::CURRENCY_FACTOR, 0, PHP_ROUND_HALF_UP);
+        return (int) round((float) $monetaryAmount * self::CURRENCY_FACTOR, 0, PHP_ROUND_HALF_UP);
     }
 
-    private function roundHalfUp(int $amount, int $quantity): int
+    private function calculateRoundedUnitAmount(int $totalAmountInCents, int $quantity): int
     {
         // 整数除算を使い、数量あたりの金額を四捨五入する。
-        return intdiv($amount + intdiv($quantity, 2), $quantity);
+        return intdiv($totalAmountInCents + intdiv($quantity, 2), $quantity);
     }
 }
