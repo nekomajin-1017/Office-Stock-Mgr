@@ -18,15 +18,14 @@
         <label class="field-label form-label" for="{{ $fieldId }}">{{ $label }}</label>
     @endif
 
-    <input class="form-element"
+    <input
         id="{{ $fieldId }}"
-        class="form-control"
         name="{{ $name }}"
         type="{{ $type }}"
         @if(! is_null($fieldValue) && $type !== 'password')
             value="{{ $fieldValue }}"
         @endif
-        {{ $attributes }}
+        {{ $attributes->class(['form-element', 'form-control']) }}
     >
 
     @if($errorMessage)

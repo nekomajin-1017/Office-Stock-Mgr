@@ -168,7 +168,7 @@ DB_PASSWORD=password
 
 ## 設計資料
 
-- [ER 図（Draw.io）](./er.drawio)
+- [ER 図（Draw.io）](./er.png)
 
 ## 本番環境の設定
 

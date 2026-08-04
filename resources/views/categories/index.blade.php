@@ -54,7 +54,7 @@
                                             <x-form-field id="name-{{ $category->id }}" name="name" label="カテゴリ名" :value="$category->name" required />
                                             <div class="content-block form-group">
                                                 <label class="field-label form-label" for="is-active-{{ $category->id }}">状態</label>
-                                                <select class="form-element" id="is-active-{{ $category->id }}" class="form-control" name="is_active" required>
+                                                <select class="form-element form-control" id="is-active-{{ $category->id }}" name="is_active" required>
                                                     <option value="1" @selected($category->is_active)>有効</option>
                                                     <option value="0" @selected(! $category->is_active)>無効</option>
                                                 </select>
