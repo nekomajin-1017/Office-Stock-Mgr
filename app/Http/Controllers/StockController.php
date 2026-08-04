@@ -15,7 +15,6 @@ class StockController extends Controller
 
     public function index(Request $request): View
     {
-        // 権限確認後、検索条件で在庫を絞り込み、評価額の集計と一覧取得を行う。
         $this->authorize('viewAny', Stock::class);
 
         $stockQuery = Stock::query()
@@ -59,7 +58,6 @@ class StockController extends Controller
 
     public function movements(Product $product): View
     {
-        // 商品の閲覧権限を確認し、在庫移動履歴から各時点の移動後数量を計算する。
         $this->authorize('view', $product);
 
         $movements = $product->stockMovements()

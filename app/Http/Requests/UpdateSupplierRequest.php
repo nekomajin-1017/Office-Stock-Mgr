@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ContactValidationRules;
 use App\Models\Supplier;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateSupplierRequest extends FormRequest
 {
+    use ContactValidationRules;
+
     public function authorize(): bool
     {
         $supplier = $this->route('supplier');
@@ -23,15 +25,6 @@ class UpdateSupplierRequest extends FormRequest
         /** @var Supplier $supplier */
         $supplier = $this->route('supplier');
 
-        return [
-            'code' => ['required', 'string', 'max:50', Rule::unique(Supplier::class)->ignore($supplier)],
-            'name' => ['required', 'string', 'max:150'],
-            'postal_code' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'contact_person' => ['nullable', 'string', 'max:100'],
-            'is_active' => ['required', 'boolean'],
-        ];
+        return $this->contactRules(Supplier::class, $supplier);
     }
 }

@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'OfficeStockMgr') | OfficeStockMgr</title>
-    <link rel="stylesheet" href="{{ asset(trim($__env->yieldContent('stylesheet', 'css/layouts/app.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('css/layouts/app.css') }}">
+    @hasSection('stylesheet')
+        <link rel="stylesheet" href="{{ asset(trim($__env->yieldContent('stylesheet'))) }}">
+    @endif
     @vite('resources/js/app.js')
 </head>
 

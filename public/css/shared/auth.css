@@ -1,24 +1,6 @@
 @layer base {
-    :root {
-        font-size: 20px;
-        font-family:
-            "Noto Sans JP", "Hiragino Sans", "Yu Gothic", ui-sans-serif,
-            system-ui, sans-serif;
-        color: #172033;
-        background: #f4f7fb;
-    }
-
-    .page-body {
-        margin: 0;
-        background: #f4f7fb;
-    }
-
     .form-element {
         font: inherit;
-    }
-
-    .page-link {
-        color: #2563eb;
     }
 }
 
@@ -47,33 +29,22 @@
     }
 
     .form-card {
-        width: min(100%, 680px);
-        padding: 28px;
-        background: #fff;
-        border: 1px solid #e1e7f0;
-        border-radius: 12px;
-        box-shadow: 0 5px 18px rgb(15 23 42 / 5%);
-    }
-
-    .form-card {
         width: min(100%, 460px);
         padding: 36px;
+        background: #fff;
         border: 0;
+        border-radius: 12px;
         box-shadow: 0 18px 50px rgb(15 23 42 / 13%);
     }
 
     .auth-form {
         display: grid;
-        gap: 8px;
+        gap: 20px;
     }
 
     .form-group {
         display: grid;
         gap: 8px;
-    }
-
-    .auth-form {
-        gap: 20px;
     }
 
     .form-label {
@@ -107,33 +78,6 @@
         color: #c2410c;
         font-size: 0.8rem;
         font-weight: 600;
-    }
-
-    .guest-body {
-        min-width: 320px;
-        background: linear-gradient(135deg, #e8f1ff, #f8fafc 48%, #e8fff9);
-    }
-
-    .auth-main {
-        display: grid;
-        min-height: 100vh;
-        padding: 24px;
-        place-items: center;
-    }
-
-    .auth-panel {
-        width: min(100%, 460px);
-    }
-
-    .guest-brand {
-        display: block;
-        margin-bottom: 20px;
-        color: #172033;
-        font-size: 1.1rem;
-        font-weight: 800;
-        letter-spacing: -0.025em;
-        text-align: center;
-        text-decoration: none;
     }
 
     .form-title {
