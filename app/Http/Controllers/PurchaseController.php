@@ -6,7 +6,6 @@ use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Product;
 use App\Models\Purchase;
-use App\Models\PurchaseItem;
 use App\Models\Stock;
 use App\Models\StockMovement;
 use App\Models\Supplier;

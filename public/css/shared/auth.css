@@ -1,0 +1,168 @@
+@layer base {
+    :root {
+        font-size: 20px;
+        font-family:
+            "Noto Sans JP", "Hiragino Sans", "Yu Gothic", ui-sans-serif,
+            system-ui, sans-serif;
+        color: #172033;
+        background: #f4f7fb;
+    }
+
+    .page-body {
+        margin: 0;
+        background: #f4f7fb;
+    }
+
+    .form-element {
+        font: inherit;
+    }
+
+    .page-link {
+        color: #2563eb;
+    }
+}
+
+@layer components {
+    .button {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 9px 16px;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 700;
+        cursor: pointer;
+        background: #2563eb;
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgb(37 99 235 / 20%);
+    }
+
+    .button:hover {
+        color: #fff;
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+    }
+
+    .form-card {
+        width: min(100%, 680px);
+        padding: 28px;
+        background: #fff;
+        border: 1px solid #e1e7f0;
+        border-radius: 12px;
+        box-shadow: 0 5px 18px rgb(15 23 42 / 5%);
+    }
+
+    .form-card {
+        width: min(100%, 460px);
+        padding: 36px;
+        border: 0;
+        box-shadow: 0 18px 50px rgb(15 23 42 / 13%);
+    }
+
+    .auth-form {
+        display: grid;
+        gap: 8px;
+    }
+
+    .form-group {
+        display: grid;
+        gap: 8px;
+    }
+
+    .auth-form {
+        gap: 20px;
+    }
+
+    .form-label {
+        color: #344158;
+        font-size: 0.825rem;
+        font-weight: 700;
+    }
+
+    .form-control {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        color: #172033;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        transition:
+            border-color 150ms ease,
+            box-shadow 150ms ease;
+    }
+
+    .form-control:focus {
+        border-color: #2563eb;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
+    }
+
+    .field-error {
+        margin: 0;
+        color: #c2410c;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .guest-body {
+        min-width: 320px;
+        background: linear-gradient(135deg, #e8f1ff, #f8fafc 48%, #e8fff9);
+    }
+
+    .auth-main {
+        display: grid;
+        min-height: 100vh;
+        padding: 24px;
+        place-items: center;
+    }
+
+    .auth-panel {
+        width: min(100%, 460px);
+    }
+
+    .guest-brand {
+        display: block;
+        margin-bottom: 20px;
+        color: #172033;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .form-title {
+        margin: 0 0 28px;
+        color: #172033;
+        font-size: 1.65rem;
+        letter-spacing: -0.025em;
+        text-align: center;
+    }
+
+    .link-center {
+        margin: 0;
+        text-align: center;
+    }
+
+    .auth-switch-link {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .auth-actions .button {
+        width: 100%;
+    }
+}
+
+@layer components {
+    @media (max-width: 600px) {
+        .form-card {
+            padding: 22px;
+        }
+    }
+}

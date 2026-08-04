@@ -1,0 +1,48 @@
+@layer base {
+    :root {
+        font-size: 20px;
+        font-family:
+            "Noto Sans JP", "Hiragino Sans", "Yu Gothic", ui-sans-serif,
+            system-ui, sans-serif;
+        color: #172033;
+        background: #f4f7fb;
+    }
+
+    .page-body {
+        margin: 0;
+        background: #f4f7fb;
+    }
+
+    .page-link {
+        color: #2563eb;
+    }
+}
+
+@layer components {
+    .guest-body {
+        min-width: 320px;
+        background: linear-gradient(135deg, #e8f1ff, #f8fafc 48%, #e8fff9);
+    }
+
+    .auth-main {
+        display: grid;
+        min-height: 100vh;
+        padding: 24px;
+        place-items: center;
+    }
+
+    .auth-panel {
+        width: min(100%, 460px);
+    }
+
+    .guest-brand {
+        display: block;
+        margin-bottom: 20px;
+        color: #172033;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        text-align: center;
+        text-decoration: none;
+    }
+}

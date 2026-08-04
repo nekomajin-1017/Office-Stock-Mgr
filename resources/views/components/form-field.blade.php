@@ -13,12 +13,12 @@
     $fieldId = $id ?? $name;
 @endphp
 
-<div class="form-group">
+<div class="content-block form-group">
     @if($label !== '')
-        <label class="form-label" for="{{ $fieldId }}">{{ $label }}</label>
+        <label class="field-label form-label" for="{{ $fieldId }}">{{ $label }}</label>
     @endif
 
-    <input
+    <input class="form-element"
         id="{{ $fieldId }}"
         class="form-control"
         name="{{ $name }}"
@@ -30,6 +30,6 @@
     >
 
     @if($errorMessage)
-        <p class="field-error">{{ $errorMessage }}</p>
+        <p class="text-content field-error">{{ $errorMessage }}</p>
     @endif
 </div>
