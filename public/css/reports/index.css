@@ -176,6 +176,39 @@
         margin-top: 36px;
     }
 
+    .report-summary {
+        margin-top: 0;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin: 0;
+    }
+
+    .summary-card {
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #e1e7f0;
+        border-radius: 12px;
+        box-shadow: 0 5px 18px rgb(15 23 42 / 4%);
+    }
+
+    .summary-label {
+        margin: 0 0 8px;
+        color: #64748b;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .summary-value {
+        margin: 0;
+        color: #172033;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+
     .report-section-heading {
         display: flex;
         gap: 20px;
@@ -205,6 +238,10 @@
         .filter-form {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
     }
 }
 
@@ -222,6 +259,10 @@
         .filter-form {
             grid-template-columns: 1fr;
             padding: 16px;
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr;
         }
 
         .report-section-heading {

@@ -57,6 +57,23 @@ class ReportTest extends TestCase
         $this->actingAs($user)->get(route('reports.index'))->assertSee('150');
     }
 
+    public function test_purchase_summary_respects_period_filter(): void
+    {
+        [$user, $product] = $this->createProductForReport('集計対象');
+        $supplier = Supplier::create(['code' => 'SUMMARY', 'name' => '集計仕入先', 'is_active' => true]);
+        $this->createConfirmedPurchase($user, $supplier, $product, '2026-07-01', 2, 100);
+        $this->createConfirmedPurchase($user, $supplier, $product, '2026-08-01', 3, 200);
+
+        $this->actingAs($user)
+            ->get(route('reports.index', ['from' => '2026-07-01', 'to' => '2026-07-31']))
+            ->assertViewHas('purchaseSummary', function (object $summary): bool {
+                return (int) $summary->total_quantity === 2
+                  && (float) $summary->total_amount === 200.0;
+            })
+            ->assertSee('総仕入数量')
+            ->assertSee('仕入総額');
+    }
+
     public function test_product_without_purchase_history_is_displayed(): void
     {
         [$user, $product] = $this->createProductForReport('履歴なし');
@@ -78,5 +95,35 @@ class ReportTest extends TestCase
         $product = Product::create(['category_id' => $category->id, 'supplier_id' => $supplier->id, 'code' => uniqid('P'), 'name' => $productName, 'unit' => '個', 'standard_sale_price' => 1, 'reorder_level' => $reorderLevel, 'is_active' => true]);
 
         return [$user, $product];
+    }
+
+    private function createConfirmedPurchase(
+        User $user,
+        Supplier $supplier,
+        Product $product,
+        string $purchaseDate,
+        int $quantity,
+        int $unitPrice,
+    ): void {
+        $subtotal = $quantity * $unitPrice;
+        $purchase = Purchase::create([
+            'purchase_number' => uniqid('P'),
+            'supplier_id' => $supplier->id,
+            'purchase_date' => $purchaseDate,
+            'status' => 'confirmed',
+            'subtotal' => $subtotal,
+            'tax_amount' => 0,
+            'total_amount' => $subtotal,
+            'created_by' => $user->id,
+        ]);
+
+        PurchaseItem::create([
+            'purchase_id' => $purchase->id,
+            'product_id' => $product->id,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+            'subtotal' => $subtotal,
+            'tax_amount' => 0,
+        ]);
     }
 }

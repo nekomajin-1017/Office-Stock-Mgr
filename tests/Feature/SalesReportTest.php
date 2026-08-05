@@ -37,16 +37,30 @@ class SalesReportTest extends TestCase
             ->assertViewHas('averageSalesQuantity', 3.0);
     }
 
-    public function test_products_above_average_sales_quantity_are_extracted(): void
+    public function test_sales_summary_is_calculated(): void
     {
-        [$user, $highSellingProduct, $lowSellingProduct] = $this->createReportData();
+        [$user] = $this->createReportData();
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('aboveAverageProducts', function (Collection $products) use ($highSellingProduct, $lowSellingProduct): bool {
-                return $products->contains('id', $highSellingProduct->id)
-                  && ! $products->contains('id', $lowSellingProduct->id);
-            });
+            ->assertViewHas('salesSummary', function (object $summary): bool {
+                return (int) $summary->total_quantity === 6
+                  && (float) $summary->total_amount === 6.0;
+            })
+            ->assertSee('総販売数量')
+            ->assertSee('販売総額');
+    }
+
+    public function test_sales_ranking_displays_average_quantity(): void
+    {
+        [$user] = $this->createReportData();
+
+        $this->actingAs($user)
+            ->get(route('reports.index'))
+            ->assertOk()
+            ->assertSee('平均販売数量は 3.00 個です。')
+            ->assertDontSee('平均比較')
+            ->assertDontSee('平均販売数を上回る商品');
     }
 
     public function test_sales_ranking_is_sorted_by_quantity(): void

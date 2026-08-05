@@ -26,26 +26,17 @@ class ReportController extends Controller
         );
 
         $salesTotals = $this->buildSalesTotalsQuery($startDate, $endDate);
+        $purchaseSummary = $this->purchaseSummary($startDate, $endDate);
+        $salesSummary = DB::query()
+            ->fromSub(clone $salesTotals, 'sales_totals')
+            ->selectRaw('COALESCE(SUM(sales_quantity), 0) as total_quantity')
+            ->selectRaw('COALESCE(SUM(sales_amount), 0) as total_amount')
+            ->first();
 
         // 商品別の確定済み販売数量から平均を算出する。販売実績がない商品は平均計算の対象外とする。
         $averageSalesQuantity = (float) (DB::query()
             ->fromSub($salesTotals, 'sales_totals')
             ->avg('sales_quantity') ?? 0);
-
-        // 同じ商品別集計と平均を比較し、販売実績があり平均販売数を上回る有効商品だけを抽出する。
-        $aboveAverageProducts = Product::query()
-            ->active()
-            ->joinSub(clone $salesTotals, 'sales_totals', function ($salesTotalsJoin): void {
-                $salesTotalsJoin->on('products.id', '=', 'sales_totals.product_id');
-            })
-            ->whereRaw(
-                'CAST(sales_totals.sales_quantity AS DECIMAL(15, 4)) > ?',
-                [$averageSalesQuantity],
-            )
-            ->select('products.*', 'sales_totals.sales_quantity')
-            ->orderByDesc('sales_totals.sales_quantity')
-            ->orderBy('products.code')
-            ->get();
 
         // 期間内の販売数量・販売金額を商品別に集計し、販売数量の上位から指定件数を取得する。
         $salesRanking = Product::query()
@@ -63,8 +54,9 @@ class ReportController extends Controller
             'unsoldProducts' => $this->unsoldProducts(),
             'latestPurchaseProducts' => $this->latestPurchaseProducts(),
             'shortageProducts' => $this->shortageProducts(),
-            'aboveAverageProducts' => $aboveAverageProducts,
             'salesRanking' => $salesRanking,
+            'purchaseSummary' => $purchaseSummary,
+            'salesSummary' => $salesSummary,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'limit' => $limit,
@@ -92,6 +84,26 @@ class ReportController extends Controller
             ->selectRaw('SUM(sale_items.quantity) as sales_quantity')
             ->selectRaw('SUM(sale_items.subtotal) as sales_amount')
             ->groupBy('sale_items.product_id');
+    }
+
+    private function purchaseSummary(string $startDate, string $endDate): object
+    {
+        $query = DB::table('purchase_items')
+            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->where('purchases.status', 'confirmed');
+
+        if ($startDate !== '') {
+            $query->whereDate('purchases.purchase_date', '>=', $startDate);
+        }
+
+        if ($endDate !== '') {
+            $query->whereDate('purchases.purchase_date', '<=', $endDate);
+        }
+
+        return $query
+            ->selectRaw('COALESCE(SUM(purchase_items.quantity), 0) as total_quantity')
+            ->selectRaw('COALESCE(SUM(purchase_items.subtotal), 0) as total_amount')
+            ->first();
     }
 
     private function unsoldProducts()
