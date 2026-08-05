@@ -50,25 +50,57 @@
         @enderror
 
         <dl class="detail-list">
-            <div class="content-block"><dt class="detail-term">伝票番号</dt><dd class="detail-description">{{ $sale->sale_number }}</dd></div>
-            <div class="content-block"><dt class="detail-term">顧客</dt><dd class="detail-description">{{ $sale->customer->name }}</dd></div>
-            <div class="content-block"><dt class="detail-term">販売日</dt><dd class="detail-description">{{ $sale->sale_date->format('Y/m/d') }}</dd></div>
-            <div class="content-block"><dt class="detail-term">状態</dt><dd class="detail-description">{{ $sale->statusLabel() }}</dd></div>
+            <div class="content-block">
+                <dt class="detail-term">伝票番号</dt>
+                <dd class="detail-description">{{ $sale->sale_number }}</dd>
+            </div>
+            <div class="content-block">
+                <dt class="detail-term">顧客</dt>
+                <dd class="detail-description">{{ $sale->customer->name }}</dd>
+            </div>
+            <div class="content-block">
+                <dt class="detail-term">販売日</dt>
+                <dd class="detail-description">{{ $sale->sale_date->format('Y/m/d') }}</dd>
+            </div>
+            <div class="content-block">
+                <dt class="detail-term">状態</dt>
+                <dd class="detail-description">{{ $sale->statusLabel() }}</dd>
+            </div>
             @if ($sale->confirmed_at)
-                <div class="content-block"><dt class="detail-term">確定日時</dt><dd class="detail-description">{{ $sale->confirmed_at->format('Y年m月d日 H:i') }}</dd></div>
-                <div class="content-block"><dt class="detail-term">確定者</dt><dd class="detail-description">{{ $sale->confirmer?->name }}</dd></div>
+                <div class="content-block">
+                    <dt class="detail-term">確定日時</dt>
+                    <dd class="detail-description">{{ $sale->confirmed_at->format('Y年m月d日 H:i') }}</dd>
+                </div>
+                <div class="content-block">
+                    <dt class="detail-term">確定者</dt>
+                    <dd class="detail-description">{{ $sale->confirmer?->name }}</dd>
+                </div>
             @endif
             @if ($sale->isCancelled())
-                <div class="content-block"><dt class="detail-term">取消日時</dt><dd class="detail-description">{{ $sale->cancelled_at?->format('Y年m月d日 H:i') }}</dd></div>
-                <div class="content-block"><dt class="detail-term">取消者</dt><dd class="detail-description">{{ $sale->canceller?->name }}</dd></div>
-                <div class="content-block"><dt class="detail-term">取消理由</dt><dd class="detail-description">{{ $sale->cancellation_reason }}</dd></div>
+                <div class="content-block">
+                    <dt class="detail-term">取消日時</dt>
+                    <dd class="detail-description">{{ $sale->cancelled_at?->format('Y年m月d日 H:i') }}</dd>
+                </div>
+                <div class="content-block">
+                    <dt class="detail-term">取消者</dt>
+                    <dd class="detail-description">{{ $sale->canceller?->name }}</dd>
+                </div>
+                <div class="content-block">
+                    <dt class="detail-term">取消理由</dt>
+                    <dd class="detail-description">{{ $sale->cancellation_reason }}</dd>
+                </div>
             @endif
         </dl>
 
         <div class="content-block table-wrapper">
             <table class="data-table">
                 <thead>
-                    <tr class="table-row"><th class="table-heading">商品</th><th class="table-heading">数量</th><th class="table-heading">販売単価</th><th class="table-heading">小計</th></tr>
+                    <tr class="table-row">
+                        <th class="table-heading">商品</th>
+                        <th class="table-heading">数量</th>
+                        <th class="table-heading">販売単価</th>
+                        <th class="table-heading">小計</th>
+                    </tr>
                 </thead>
                 <tbody>
                     @foreach ($sale->items as $item)

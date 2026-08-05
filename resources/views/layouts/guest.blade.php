@@ -9,7 +9,6 @@
     @hasSection('stylesheet')
         <link rel="stylesheet" href="{{ asset(trim($__env->yieldContent('stylesheet'))) }}">
     @endif
-    @vite('resources/js/app.js')
 </head>
 
 <body class="page-body guest-body">

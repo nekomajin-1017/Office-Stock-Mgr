@@ -19,7 +19,20 @@
             @endif
             <x-form-field name="code" label="商品コード" :value="$product->code" required autofocus />
             <x-form-field name="name" label="商品名" :value="$product->name" required />
-            <div class="content-block form-group"><label class="field-label form-label" for="supplier-id">仕入先</label><select id="supplier-id" class="form-element form-control" name="supplier_id" required><option value="">選択してください</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected((string)old('supplier_id',$product->supplier_id)===(string)$supplier->id)>{{ $supplier->name }}</option>@endforeach</select>@error('supplier_id')<p class="text-content field-error">{{ $message }}</p>@enderror</div>
+            <div class="content-block form-group">
+                <label class="field-label form-label" for="supplier-id">仕入先</label>
+                <select id="supplier-id" class="form-element form-control" name="supplier_id" required>
+                    <option value="">選択してください</option>
+                    @foreach ($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" @selected((string) old('supplier_id', $product->supplier_id) === (string) $supplier->id)>
+                            {{ $supplier->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('supplier_id')
+                    <p class="text-content field-error">{{ $message }}</p>
+                @enderror
+            </div>
             <div class="content-block form-group">
                 <label class="field-label form-label" for="category-id">カテゴリ</label>
                 <select id="category-id" class="form-element form-control" name="category_id" required>

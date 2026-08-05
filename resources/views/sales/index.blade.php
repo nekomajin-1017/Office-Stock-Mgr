@@ -3,8 +3,83 @@
 @section('stylesheet', 'css/shared/transaction-index.css')
 
 @section('title', '販売伝票一覧')
+
 @section('content')
-<section class="dashboard-main"><div class="content-block page-heading"><h1 class="page-title">販売伝票一覧</h1><a class="page-link button button-link" href="{{ route('sales.create') }}">販売伝票登録</a></div>
-<form class="form-container filter-form" method="get"><div class="content-block form-group"><label class="field-label form-label">伝票番号<input class="form-element form-control" name="sale_number" value="{{ request('sale_number') }}"></label></div><div class="content-block form-group"><label class="field-label form-label">顧客<select class="form-element form-control" name="customer_id"><option value="">すべて</option>@foreach($customers as $customer)<option value="{{ $customer->id }}" @selected((string)$customer->id===request('customer_id'))>{{ $customer->name }}</option>@endforeach</select></label></div><div class="content-block form-group"><label class="field-label form-label">状態<select class="form-element form-control" name="status"><option value="">すべて</option><option value="draft" @selected(request('status') === 'draft')>下書き</option><option value="confirmed" @selected(request('status') === 'confirmed')>確定済み</option><option value="cancelled" @selected(request('status') === 'cancelled')>取消済み</option></select></label></div><button class="form-element button button-inline">検索</button></form>
-<div class="content-block table-wrapper"><table class="data-table"><thead><tr class="table-row"><th class="table-heading">伝票番号</th><th class="table-heading">販売日</th><th class="table-heading">顧客</th><th class="table-heading">合計金額</th><th class="table-heading">状態</th><th class="table-heading">登録者</th><th class="table-heading"></th></tr></thead><tbody>@forelse($sales as $sale)<tr class="table-row"><td class="table-cell">{{ $sale->sale_number }}</td><td class="table-cell">{{ $sale->sale_date->format('Y/m/d') }}</td><td class="table-cell">{{ $sale->customer->name }}</td><td class="table-cell">{{ number_format((float)$sale->total_amount) }} 円</td><td class="table-cell">{{ $sale->statusLabel() }}</td><td class="table-cell">{{ $sale->creator->name }}</td><td class="table-cell"><a class="page-link action-button" href="{{ route('sales.show',$sale) }}">詳細</a></td></tr>@empty<tr class="table-row"><td class="table-cell" colspan="7">販売伝票がありません。</td></tr>@endforelse</tbody></table></div><x-pagination :paginator="$sales" /></section>
+    <section class="dashboard-main">
+        <div class="content-block page-heading">
+            <h1 class="page-title">販売伝票一覧</h1>
+            <a class="page-link button button-link" href="{{ route('sales.create') }}">販売伝票登録</a>
+        </div>
+
+        <form class="form-container filter-form" method="get">
+            <div class="content-block form-group">
+                <label class="field-label form-label">
+                    伝票番号
+                    <input class="form-element form-control" name="sale_number" value="{{ request('sale_number') }}">
+                </label>
+            </div>
+            <div class="content-block form-group">
+                <label class="field-label form-label">
+                    顧客
+                    <select class="form-element form-control" name="customer_id">
+                        <option value="">すべて</option>
+                        @foreach ($customers as $customer)
+                            <option value="{{ $customer->id }}" @selected((string) $customer->id === request('customer_id'))>
+                                {{ $customer->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+            <div class="content-block form-group">
+                <label class="field-label form-label">
+                    状態
+                    <select class="form-element form-control" name="status">
+                        <option value="">すべて</option>
+                        <option value="draft" @selected(request('status') === 'draft')>下書き</option>
+                        <option value="confirmed" @selected(request('status') === 'confirmed')>確定済み</option>
+                        <option value="cancelled" @selected(request('status') === 'cancelled')>取消済み</option>
+                    </select>
+                </label>
+            </div>
+            <button class="form-element button button-inline" type="submit">検索</button>
+        </form>
+
+        <div class="content-block table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr class="table-row">
+                        <th class="table-heading">伝票番号</th>
+                        <th class="table-heading">販売日</th>
+                        <th class="table-heading">顧客</th>
+                        <th class="table-heading">合計金額</th>
+                        <th class="table-heading">状態</th>
+                        <th class="table-heading">登録者</th>
+                        <th class="table-heading"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($sales as $sale)
+                        <tr class="table-row">
+                            <td class="table-cell">{{ $sale->sale_number }}</td>
+                            <td class="table-cell">{{ $sale->sale_date->format('Y/m/d') }}</td>
+                            <td class="table-cell">{{ $sale->customer->name }}</td>
+                            <td class="table-cell">{{ number_format((float) $sale->total_amount) }} 円</td>
+                            <td class="table-cell">{{ $sale->statusLabel() }}</td>
+                            <td class="table-cell">{{ $sale->creator->name }}</td>
+                            <td class="table-cell">
+                                <a class="page-link action-button" href="{{ route('sales.show', $sale) }}">詳細</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr class="table-row">
+                            <td class="table-cell" colspan="7">販売伝票がありません。</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <x-pagination :paginator="$sales" />
+    </section>
 @endsection

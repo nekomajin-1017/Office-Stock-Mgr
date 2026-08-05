@@ -41,12 +41,22 @@
             </div>
             <div class="content-block table-wrapper">
                 <table class="data-table">
-                    <thead><tr class="table-row"><th class="table-heading">商品コード</th><th class="table-heading">商品名</th></tr></thead>
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($unsoldProducts as $product)
-                            <tr class="table-row"><td class="table-cell">{{ $product->code }}</td><td class="table-cell">{{ $product->name }}</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell">{{ $product->code }}</td>
+                                <td class="table-cell">{{ $product->name }}</td>
+                            </tr>
                         @empty
-                            <tr class="table-row"><td class="table-cell" colspan="2">該当する商品はありません。</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="2">該当する商品はありません。</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -62,7 +72,13 @@
             </div>
             <div class="content-block table-wrapper">
                 <table class="data-table">
-                    <thead><tr class="table-row"><th class="table-heading">商品コード</th><th class="table-heading">商品名</th><th class="table-heading">最新仕入単価</th></tr></thead>
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                            <th class="table-heading">最新仕入単価</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($latestPurchaseProducts as $product)
                             <tr class="table-row">
@@ -71,7 +87,9 @@
                                 <td class="table-cell">{{ $product->latest_purchase_price === null ? '仕入履歴なし' : number_format((float) $product->latest_purchase_price).' 円' }}</td>
                             </tr>
                         @empty
-                            <tr class="table-row"><td class="table-cell" colspan="3">商品データがありません。</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="3">商品データがありません。</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -87,7 +105,14 @@
             </div>
             <div class="content-block table-wrapper">
                 <table class="data-table">
-                    <thead><tr class="table-row"><th class="table-heading">商品コード</th><th class="table-heading">商品名</th><th class="table-heading">発注基準数</th><th class="table-heading">不足数</th></tr></thead>
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                            <th class="table-heading">発注基準数</th>
+                            <th class="table-heading">不足数</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($shortageProducts as $product)
                             <tr class="table-row">
@@ -97,7 +122,9 @@
                                 <td class="table-cell">不足 {{ number_format($product->shortage_quantity) }}</td>
                             </tr>
                         @empty
-                            <tr class="table-row"><td class="table-cell" colspan="4">在庫不足の商品はありません。</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="4">在庫不足の商品はありません。</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -113,12 +140,24 @@
             </div>
             <div class="content-block table-wrapper">
                 <table class="data-table">
-                    <thead><tr class="table-row"><th class="table-heading">商品コード</th><th class="table-heading">商品名</th><th class="table-heading">販売数量</th></tr></thead>
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                            <th class="table-heading">販売数量</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($aboveAverageProducts as $product)
-                            <tr class="table-row"><td class="table-cell">{{ $product->code }}</td><td class="table-cell">{{ $product->name }}</td><td class="table-cell">{{ number_format($product->sales_quantity) }}</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell">{{ $product->code }}</td>
+                                <td class="table-cell">{{ $product->name }}</td>
+                                <td class="table-cell">{{ number_format($product->sales_quantity) }}</td>
+                            </tr>
                         @empty
-                            <tr class="table-row"><td class="table-cell" colspan="3">平均販売数を上回る商品はありません。</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="3">平均販売数を上回る商品はありません。</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -134,7 +173,15 @@
             </div>
             <div class="content-block table-wrapper">
                 <table class="data-table">
-                    <thead><tr class="table-row"><th class="table-heading">順位</th><th class="table-heading">商品コード</th><th class="table-heading">商品名</th><th class="table-heading">販売数量</th><th class="table-heading">販売金額</th></tr></thead>
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">順位</th>
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                            <th class="table-heading">販売数量</th>
+                            <th class="table-heading">販売金額</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($salesRanking as $product)
                             <tr class="table-row">
@@ -145,7 +192,9 @@
                                 <td class="table-cell">{{ number_format((float) $product->sales_amount) }} 円</td>
                             </tr>
                         @empty
-                            <tr class="table-row"><td class="table-cell" colspan="5">対象期間の販売実績はありません。</td></tr>
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="5">対象期間の販売実績はありません。</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -46,10 +46,10 @@
 | データベース | MySQL 8.4、phpMyAdmin |
 | 認証 | Laravel Fortify 1.37.2 |
 | PDF 出力 | Laravel Dompdf 3.1.2（Dompdf 3.1.6） |
-| フロントエンド | Vite 8、Tailwind CSS 4 |
+| フロントエンド | Blade、CSS、JavaScript |
 | 開発環境 | Laravel Sail、Docker |
 
-バージョンは `compose.yaml`、`composer.lock`、`package-lock.json` に記録された値を基準にしています。
+バージョンは `compose.yaml` と `composer.lock` に記録された値を基準にしています。
 
 ## セットアップ
 
@@ -91,14 +91,12 @@ DB_PASSWORD=password
 
 ### 4. アプリケーションの初期化
 
-コンテナを起動し、アプリケーションキー、データベース、フロントエンド資産を準備します。
+コンテナを起動し、アプリケーションキーとデータベースを準備します。
 
 ```bash
 ./vendor/bin/sail up -d --wait
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan migrate:fresh --seed
-./vendor/bin/sail npm install
-./vendor/bin/sail npm run build
 ```
 
 初期化が完了したら、<http://localhost> へアクセスしてください。
@@ -162,9 +160,7 @@ DB_PASSWORD=password
 | ロール | メールアドレス | パスワード |
 | --- | --- | --- |
 | 管理者 | `admin@example.com` | `Coachtech777` |
-| 一般ユーザー | `staff1@example.com` | `Coachtech777` |
-| 一般ユーザー | `staff2@example.com` | `Coachtech777` |
-| 一般ユーザー | `staff3@example.com` | `Coachtech777` |
+| 一般ユーザー | `staff@example.com` | `Coachtech777` |
 
 ## 設計資料
 
