@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\User;
@@ -92,6 +94,54 @@ class ProductManagementTest extends TestCase
             ->get(route('products.index', ['page' => 2]))
             ->assertOk()
             ->assertSee('11件中11〜11件目を表示');
+    }
+
+    public function test_product_list_displays_latest_confirmed_purchase_price(): void
+    {
+        $user = User::factory()->create();
+        $category = Category::create(['name' => '文房具', 'is_active' => true]);
+        $supplier = Supplier::create(['code' => 'SUP-001', 'name' => '仕入先', 'is_active' => true]);
+        $product = $this->createProduct($category, ['code' => 'PEN-001']);
+
+        foreach ([['2026-07-01', 100], ['2026-07-02', 150]] as [$purchaseDate, $unitPrice]) {
+            $purchase = Purchase::create([
+                'purchase_number' => uniqid('PUR-'),
+                'supplier_id' => $supplier->id,
+                'purchase_date' => $purchaseDate,
+                'status' => 'confirmed',
+                'subtotal' => $unitPrice,
+                'tax_amount' => 0,
+                'total_amount' => $unitPrice,
+                'created_by' => $user->id,
+            ]);
+            PurchaseItem::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $product->id,
+                'quantity' => 1,
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice,
+                'tax_amount' => 0,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('最新仕入単価')
+            ->assertSee('150 円')
+            ->assertDontSee('100 円');
+    }
+
+    public function test_product_list_displays_no_purchase_history_for_product_without_purchase(): void
+    {
+        $user = User::factory()->create();
+        $category = Category::create(['name' => '文房具', 'is_active' => true]);
+        $this->createProduct($category);
+
+        $this->actingAs($user)
+            ->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('仕入履歴なし');
     }
 
     public function test_inactive_category_cannot_be_selected_for_new_product(): void

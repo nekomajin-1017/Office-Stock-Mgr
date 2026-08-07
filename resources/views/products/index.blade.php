@@ -46,6 +46,7 @@
                         <th class="table-heading" scope="col">商品名</th>
                         <th class="table-heading" scope="col">カテゴリ</th>
                         <th class="table-heading" scope="col">在庫数</th>
+                        <th class="table-heading" scope="col">最新仕入単価</th>
                         <th class="table-heading" scope="col">状態</th>
                         <th class="table-heading" scope="col"><span class="text-span sr-only">操作</span></th>
                     </tr>
@@ -57,6 +58,7 @@
                             <td class="table-cell">{{ $product->name }}</td>
                             <td class="table-cell">{{ $product->category->name }}</td>
                             <td class="table-cell">{{ $product->stock?->quantity ?? 0 }}</td>
+                            <td class="table-cell">{{ $product->latest_purchase_price === null ? '仕入履歴なし' : number_format((float) $product->latest_purchase_price).' 円' }}</td>
                             <td class="table-cell">{{ $product->is_active ? '有効' : '無効' }}</td>
                             <td class="table-cell">
                                 <a class="page-link action-button" href="{{ route('products.edit', $product) }}">編集</a>
@@ -71,7 +73,7 @@
                         </tr>
                     @empty
                         <tr class="table-row">
-                            <td class="table-cell" colspan="6">商品が登録されていません。</td>
+                            <td class="table-cell" colspan="7">商品が登録されていません。</td>
                         </tr>
                     @endforelse
                 </tbody>

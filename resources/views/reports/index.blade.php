@@ -88,39 +88,6 @@
         <section class="report-section">
             <div class="content-block report-section-heading">
                 <div class="content-block">
-                    <h2 class="section-title">最新仕入単価</h2>
-                    <p class="text-content">商品ごとの直近の確定仕入単価です。仕入履歴がない商品も表示します。</p>
-                </div>
-            </div>
-            <div class="content-block table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr class="table-row">
-                            <th class="table-heading">商品コード</th>
-                            <th class="table-heading">商品名</th>
-                            <th class="table-heading">最新仕入単価</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($latestPurchaseProducts as $product)
-                            <tr class="table-row">
-                                <td class="table-cell">{{ $product->code }}</td>
-                                <td class="table-cell">{{ $product->name }}</td>
-                                <td class="table-cell">{{ $product->latest_purchase_price === null ? '仕入履歴なし' : number_format((float) $product->latest_purchase_price).' 円' }}</td>
-                            </tr>
-                        @empty
-                            <tr class="table-row">
-                                <td class="table-cell" colspan="3">商品データがありません。</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="report-section">
-            <div class="content-block report-section-heading">
-                <div class="content-block">
                     <h2 class="section-title">在庫不足商品</h2>
                     <p class="text-content">現在庫数が発注基準数以下の商品です。</p>
                 </div>

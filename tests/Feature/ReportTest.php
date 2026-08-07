@@ -45,18 +45,6 @@ class ReportTest extends TestCase
         $this->actingAs($user)->get(route('reports.index'))->assertSee('未販売');
     }
 
-    public function test_latest_purchase_price_is_displayed(): void
-    {
-        [$user, $product] = $this->createProductForReport('仕入商品');
-        $supplier = Supplier::create(['code' => 'S', 'name' => 'S', 'is_active' => true]);
-        foreach ([['2026-07-01', 100], ['2026-07-02', 150]] as [$purchaseDate, $unitPrice]) {
-            $purchase = Purchase::create(['purchase_number' => uniqid('P'), 'supplier_id' => $supplier->id, 'purchase_date' => $purchaseDate, 'status' => 'confirmed', 'subtotal' => $unitPrice, 'tax_amount' => 0, 'total_amount' => $unitPrice, 'created_by' => $user->id]);
-            PurchaseItem::create(['purchase_id' => $purchase->id, 'product_id' => $product->id, 'quantity' => 1, 'unit_price' => $unitPrice, 'subtotal' => $unitPrice, 'tax_amount' => 0]);
-        }
-
-        $this->actingAs($user)->get(route('reports.index'))->assertSee('150');
-    }
-
     public function test_purchase_summary_respects_period_filter(): void
     {
         [$user, $product] = $this->createProductForReport('集計対象');
@@ -74,10 +62,13 @@ class ReportTest extends TestCase
             ->assertSee('仕入総額');
     }
 
-    public function test_product_without_purchase_history_is_displayed(): void
+    public function test_latest_purchase_price_section_is_not_displayed(): void
     {
-        [$user, $product] = $this->createProductForReport('履歴なし');
-        $this->actingAs($user)->get(route('reports.index'))->assertSee('履歴なし');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('reports.index'))
+            ->assertDontSee('最新仕入単価');
     }
 
     public function test_shortage_products_are_extracted(): void

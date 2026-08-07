@@ -52,7 +52,6 @@ class ReportController extends Controller
 
         return view('reports.index', [
             'unsoldProducts' => $this->unsoldProducts(),
-            'latestPurchaseProducts' => $this->latestPurchaseProducts(),
             'shortageProducts' => $this->shortageProducts(),
             'salesRanking' => $salesRanking,
             'purchaseSummary' => $purchaseSummary,
@@ -119,27 +118,6 @@ class ReportController extends Controller
                     ->whereColumn('sale_items.product_id', 'products.id')
                     ->where('sales.status', 'confirmed');
             })
-            ->orderBy('code')
-            ->get();
-    }
-
-    private function latestPurchaseProducts()
-    {
-        // 相関サブクエリで商品ごとの確定仕入を仕入日・明細IDの降順に並べ、先頭の単価を取得する。
-        // 同日に複数の仕入明細がある場合は、明細IDが大きい方を最新として扱う。
-        $latestPurchasePrice = DB::table('purchase_items')
-            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
-            ->whereColumn('purchase_items.product_id', 'products.id')
-            ->where('purchases.status', 'confirmed')
-            ->orderByDesc('purchases.purchase_date')
-            ->orderByDesc('purchase_items.id')
-            ->limit(1)
-            ->select('purchase_items.unit_price');
-
-        return Product::query()
-            ->active()
-            ->select('products.*')
-            ->selectSub($latestPurchasePrice, 'latest_purchase_price')
             ->orderBy('code')
             ->get();
     }

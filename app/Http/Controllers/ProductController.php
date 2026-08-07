@@ -22,8 +22,19 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
+        $latestPurchasePrice = DB::table('purchase_items')
+            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->whereColumn('purchase_items.product_id', 'products.id')
+            ->where('purchases.status', 'confirmed')
+            ->orderByDesc('purchases.purchase_date')
+            ->orderByDesc('purchase_items.id')
+            ->limit(1)
+            ->select('purchase_items.unit_price');
+
         $products = Product::query()
             ->with(['category', 'stock'])
+            ->select('products.*')
+            ->selectSub($latestPurchasePrice, 'latest_purchase_price')
             ->when($request->filled('keyword'), function (Builder $query) use ($request): void {
                 $keyword = '%'.$request->string('keyword')->toString().'%';
 
