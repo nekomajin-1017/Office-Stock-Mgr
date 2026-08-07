@@ -36,22 +36,6 @@ class RegistrationTest extends TestCase
         $this->assertTrue($user->is_active);
     }
 
-    public function test_public_registration_assigns_user_role(): void
-    {
-        $this->post(route('register'), [
-            'name' => '山田太郎',
-            'email' => 'user@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $this->assertDatabaseHas('users', [
-            'email' => 'user@example.com',
-            'role' => 'user',
-            'is_active' => true,
-        ]);
-    }
-
     public function test_public_registration_ignores_admin_role(): void
     {
         $this->post(route('register'), [

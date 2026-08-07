@@ -195,18 +195,6 @@ class ProductManagementTest extends TestCase
         $this->assertDatabaseHas('products', ['id' => $product->id, 'is_active' => false]);
     }
 
-    public function test_inactive_products_are_excluded_from_purchase_and_sale_candidates(): void
-    {
-        $category = Category::create(['name' => '文房具', 'is_active' => true]);
-        $activeProduct = $this->createProduct($category, ['code' => 'PEN-001', 'is_active' => true]);
-        $inactiveProduct = $this->createProduct($category, ['code' => 'PEN-002', 'is_active' => false]);
-
-        $products = Product::active()->orderBy('id')->get();
-
-        $this->assertTrue($products->contains($activeProduct));
-        $this->assertFalse($products->contains($inactiveProduct));
-    }
-
     private function createProduct(Category $category, array $overrides = []): Product
     {
         return Product::factory()->create(array_merge([

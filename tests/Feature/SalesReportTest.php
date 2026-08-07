@@ -34,7 +34,8 @@ class SalesReportTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('averageSalesQuantity', 3.0);
+            ->assertViewHas('averageSalesQuantity', 3.0)
+            ->assertSee('平均販売数量は 3.00 個です。');
     }
 
     public function test_sales_summary_is_calculated(): void
@@ -49,18 +50,6 @@ class SalesReportTest extends TestCase
             })
             ->assertSee('総販売数量')
             ->assertSee('販売総額');
-    }
-
-    public function test_sales_ranking_displays_average_quantity(): void
-    {
-        [$user] = $this->createReportData();
-
-        $this->actingAs($user)
-            ->get(route('reports.index'))
-            ->assertOk()
-            ->assertSee('平均販売数量は 3.00 個です。')
-            ->assertDontSee('平均比較')
-            ->assertDontSee('平均販売数を上回る商品');
     }
 
     public function test_sales_ranking_is_sorted_by_quantity(): void

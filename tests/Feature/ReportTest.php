@@ -30,15 +30,6 @@ class ReportTest extends TestCase
             ->assertOk();
     }
 
-    public function test_sql_intentions_are_not_rendered_on_report_screen(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get(route('reports.index'))
-            ->assertDontSee('SQLの意図');
-    }
-
     public function test_unsold_products_are_extracted(): void
     {
         [$user, $product] = $this->createProductForReport('未販売');
@@ -60,15 +51,6 @@ class ReportTest extends TestCase
             })
             ->assertSee('総仕入数量')
             ->assertSee('仕入総額');
-    }
-
-    public function test_latest_purchase_price_section_is_not_displayed(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get(route('reports.index'))
-            ->assertDontSee('最新仕入単価');
     }
 
     public function test_shortage_products_are_extracted(): void

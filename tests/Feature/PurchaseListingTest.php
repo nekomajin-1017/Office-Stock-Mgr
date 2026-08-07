@@ -44,13 +44,6 @@ class PurchaseListingTest extends TestCase
             ->assertOk()->assertSee($purchase->supplier->name)->assertSee($product->name)->assertSee('300 円')->assertSee('一覧へ戻る');
     }
 
-    public function test_purchase_list_preserves_search_query_in_pagination(): void
-    {
-        [$user] = $this->createPurchase('PUR-001', '2026-07-20', Purchase::STATUS_DRAFT);
-        $this->actingAs($user)->get(route('purchases.index', ['status' => Purchase::STATUS_DRAFT]))
-            ->assertOk()->assertSee('PUR-001');
-    }
-
     private function createPurchase(string $number, string $date, string $status, ?User $user = null): array
     {
         $user ??= User::factory()->create();

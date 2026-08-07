@@ -26,27 +26,6 @@ class SaleConfirmationTest extends TestCase
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'movement_type' => 'sale', 'quantity_change' => -3, 'reference_id' => $sale->id]);
     }
 
-    public function test_sale_confirmation_succeeds(): void
-    {
-        [$user, $sale] = $this->createSaleWithStock(5, 1);
-        $this->actingAs($user)->post(route('sales.confirm', $sale))->assertRedirect();
-        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'status' => 'confirmed']);
-    }
-
-    public function test_sale_confirmation_decreases_stock(): void
-    {
-        [$user, $sale, $product] = $this->createSaleWithStock(5, 3);
-        $this->actingAs($user)->post(route('sales.confirm', $sale));
-        $this->assertDatabaseHas('stocks', ['product_id' => $product->id, 'quantity' => 2]);
-    }
-
-    public function test_sale_confirmation_creates_stock_movement(): void
-    {
-        [$user, $sale, $product] = $this->createSaleWithStock(5, 3);
-        $this->actingAs($user)->post(route('sales.confirm', $sale));
-        $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'movement_type' => 'sale', 'reference_id' => $sale->id]);
-    }
-
     public function test_sale_can_reduce_stock_to_zero(): void
     {
         [$user, $sale, $product] = $this->createSaleWithStock(3, 3);
