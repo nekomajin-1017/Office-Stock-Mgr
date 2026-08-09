@@ -60,6 +60,26 @@ class ReportTest extends TestCase
         $this->actingAs($user)->get(route('reports.index'))->assertSee('不足 2');
     }
 
+    public function test_inventory_value_ranking_is_ordered_and_limited(): void
+    {
+        [$user, $lowerValueProduct] = $this->createProductForReport('評価額下位');
+        [, $higherValueProduct] = $this->createProductForReport('評価額上位');
+        Stock::create(['product_id' => $lowerValueProduct->id, 'quantity' => 2, 'average_cost' => 100]);
+        Stock::create(['product_id' => $higherValueProduct->id, 'quantity' => 3, 'average_cost' => 100]);
+
+        $this->actingAs($user)
+            ->get(route('reports.index', ['limit' => 1]))
+            ->assertViewHas('inventoryValueRanking', function ($ranking) use ($higherValueProduct): bool {
+                return $ranking->count() === 1
+                  && $ranking->first()->id === $higherValueProduct->id
+                  && (int) $ranking->first()->stock_quantity === 3
+                  && (float) $ranking->first()->average_cost === 100.0
+                  && (float) $ranking->first()->inventory_value === 300.0;
+            })
+            ->assertSee('在庫評価額ランキング')
+            ->assertSee('評価額上位');
+    }
+
     private function createProductForReport(string $productName, int $reorderLevel = 1): array
     {
         $user = User::factory()->create();

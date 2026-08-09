@@ -50,10 +50,23 @@ class ReportController extends Controller
             ->limit($limit)
             ->get();
 
+        $inventoryValueRanking = Product::query()
+            ->active()
+            ->leftJoin('stocks', 'stocks.product_id', '=', 'products.id')
+            ->select('products.*')
+            ->selectRaw('COALESCE(stocks.quantity, 0) as stock_quantity')
+            ->selectRaw('COALESCE(stocks.average_cost, 0) as average_cost')
+            ->selectRaw('COALESCE(stocks.quantity, 0) * COALESCE(stocks.average_cost, 0) as inventory_value')
+            ->orderByDesc('inventory_value')
+            ->orderBy('products.code')
+            ->limit($limit)
+            ->get();
+
         return view('reports.index', [
             'unsoldProducts' => $this->unsoldProducts(),
             'shortageProducts' => $this->shortageProducts(),
             'salesRanking' => $salesRanking,
+            'inventoryValueRanking' => $inventoryValueRanking,
             'purchaseSummary' => $purchaseSummary,
             'salesSummary' => $salesSummary,
             'startDate' => $startDate,

@@ -157,5 +157,44 @@
                 </table>
             </div>
         </section>
+
+        <section class="report-section">
+            <div class="content-block report-section-heading">
+                <div class="content-block">
+                    <h2 class="section-title">在庫評価額ランキング</h2>
+                    <p class="text-content">現在庫数と移動平均原価から算出した評価額の降順で、同額の場合は商品コード順に並べます。</p>
+                </div>
+            </div>
+            <div class="content-block table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-heading">順位</th>
+                            <th class="table-heading">商品コード</th>
+                            <th class="table-heading">商品名</th>
+                            <th class="table-heading">現在庫数</th>
+                            <th class="table-heading">移動平均原価</th>
+                            <th class="table-heading">在庫評価額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($inventoryValueRanking as $product)
+                            <tr class="table-row">
+                                <td class="table-cell">{{ $loop->iteration }}</td>
+                                <td class="table-cell">{{ $product->code }}</td>
+                                <td class="table-cell">{{ $product->name }}</td>
+                                <td class="table-cell">{{ number_format($product->stock_quantity) }}</td>
+                                <td class="table-cell">{{ number_format((float) $product->average_cost, 2) }} 円</td>
+                                <td class="table-cell">{{ number_format((float) $product->inventory_value, 2) }} 円</td>
+                            </tr>
+                        @empty
+                            <tr class="table-row">
+                                <td class="table-cell" colspan="6">対象となる商品はありません。</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 @endsection
