@@ -212,10 +212,11 @@
     }
 
     .action-button {
+        box-sizing: border-box;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 32px;
+        height: 32px;
         padding: 6px 10px;
         color: #1d4ed8;
         font-size: 0.875rem;
