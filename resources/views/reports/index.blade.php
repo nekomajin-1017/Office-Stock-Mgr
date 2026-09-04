@@ -6,10 +6,10 @@
 @section('title', 'レポート')
 
 @section('content')
-    <main class="dashboard-main report-page">
+    <section class="dashboard-main report-page" aria-labelledby="report-title">
         <div class="content-block page-heading">
             <div class="content-block">
-                <h1 class="page-title">レポート</h1>
+                <h1 class="page-title" id="report-title">レポート</h1>
                 <p class="text-content page-description">確定済みの仕入・販売データと現在庫を集計しています。</p>
             </div>
         </div>
@@ -196,5 +196,5 @@
                 </table>
             </div>
         </section>
-    </main>
+    </section>
 @endsection

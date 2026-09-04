@@ -200,10 +200,36 @@
                     input.name = input.name.replace(/items\[\d+]/, `items[${index}]`);
                     input.value = input.tagName === 'INPUT' && input.name.endsWith('[quantity]') ? 1 : '';
                 });
+                item.querySelector('[name$="[product_id]"]').value = '';
 
                 items.append(item);
             },
         });
+
+        const saleForm = document.querySelector('[data-sale-form]');
+
+        if (saleForm) {
+            const updateSaleItem = (item, prefillPrice = false) => {
+                const product = item.querySelector('[name$="[product_id]"]');
+                const quantity = item.querySelector('[name$="[quantity]"]');
+                const unitPrice = item.querySelector('[name$="[unit_price]"]');
+                const option = product.selectedOptions[0];
+                const stock = option?.dataset.stock;
+
+                quantity.max = stock ?? '';
+
+                if (prefillPrice && unitPrice.value === '' && option?.dataset.standardPrice) {
+                    unitPrice.value = option.dataset.standardPrice;
+                }
+            };
+
+            saleForm.querySelectorAll('[data-sale-item]').forEach((item) => updateSaleItem(item));
+            saleForm.addEventListener('change', (event) => {
+                const product = event.target.closest('[name$="[product_id]"]');
+
+                if (product) updateSaleItem(product.closest('[data-sale-item]'), true);
+            });
+        }
     </script>
 </body>
 
