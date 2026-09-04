@@ -88,7 +88,7 @@ class InventoryWorkflowTest extends TestCase
 
         $this->get(route('sales.edit', $sale))
             ->assertSee('value="'.$sale->customer_id.'" selected', escape: false)
-            ->assertSee('value="'.$sale->items->first()->product_id.'" data-stock="5" selected', escape: false);
+            ->assertSee('value="'.$sale->items->first()->product_id.'" data-stock="5" data-standard-price="1.00" selected', escape: false);
 
         $this->assertDatabaseHas('sales', [
             'id' => $sale->id,

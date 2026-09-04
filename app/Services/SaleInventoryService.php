@@ -34,6 +34,11 @@ class SaleInventoryService
                     throw ValidationException::withMessages(['sale' => '在庫数が不足しています。']);
                 }
 
+                $unitCost = $stock->average_cost;
+                $item->update([
+                    'cost_unit_price' => $unitCost,
+                    'cost_amount' => $item->quantity * $unitCost,
+                ]);
                 $stock->decrement('quantity', $item->quantity);
                 $this->recordMovement($sale, $item, 'sale', -$item->quantity);
             }

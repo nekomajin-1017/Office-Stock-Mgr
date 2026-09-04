@@ -188,11 +188,23 @@
     }
 
     .summary-card {
+        position: relative;
         padding: 20px;
         background: #fff;
         border: 1px solid #e1e7f0;
         border-radius: 12px;
         box-shadow: 0 5px 18px rgb(15 23 42 / 4%);
+        overflow: hidden;
+    }
+
+    .summary-card::before {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 4px;
+        content: "";
+        background: linear-gradient(90deg, #2563eb, #5eead4);
     }
 
     .summary-label {

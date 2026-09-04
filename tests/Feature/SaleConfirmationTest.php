@@ -26,6 +26,26 @@ class SaleConfirmationTest extends TestCase
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'movement_type' => 'sale', 'quantity_change' => -3, 'reference_id' => $sale->id]);
     }
 
+    public function test_sale_confirmation_records_current_average_cost_on_item_and_movement(): void
+    {
+        [$user, $sale, $product] = $this->createSaleWithStock(5, 3);
+
+        $this->actingAs($user)->post(route('sales.confirm', $sale))->assertRedirect();
+
+        $this->assertDatabaseHas('sale_items', [
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'cost_unit_price' => 10,
+            'cost_amount' => 30,
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'movement_type' => 'sale',
+            'reference_id' => $sale->id,
+            'unit_cost' => 10,
+        ]);
+    }
+
     public function test_sale_can_reduce_stock_to_zero(): void
     {
         [$user, $sale, $product] = $this->createSaleWithStock(3, 3);

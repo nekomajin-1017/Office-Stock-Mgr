@@ -93,7 +93,7 @@
                                 <select class="form-element form-control" name="items[{{ $index }}][product_id]" required>
                                     <option value="">商品を選択してください</option>
                                     @foreach ($products as $product)
-                                        <option value="{{ $product->id }}" data-stock="{{ $product->stock?->quantity ?? 0 }}" @selected((string) $product->id === (string) ($item['product_id'] ?? ''))>
+                                        <option value="{{ $product->id }}" data-stock="{{ $product->stock?->quantity ?? 0 }}" data-standard-price="{{ $product->standard_sale_price }}" @selected((string) $product->id === (string) ($item['product_id'] ?? ''))>
                                             {{ $product->code }} / {{ $product->name }}（在庫: {{ $product->stock?->quantity ?? 0 }}）
                                         </option>
                                     @endforeach
